@@ -1,37 +1,37 @@
-// RefSense 설정 UI 컨트롤러
+// RefSense settings UI controller
 const RefSensePrefs = {
     originalSettings: {},
     hasChanges: false,
 
     init() {
-        console.log('🚀 RefSensePrefs 초기화 시작');
+        console.log('🚀 RefSensePrefs initialization started');
         this.bindEvents();
-        this.requestSettings(); // 설정 요청
+        this.requestSettings(); // request settings
     },
 
     async requestSettings() {
-        console.log('📤 설정 요청 전송');
+        console.log('📤 Sending settings request');
         
-        // WebExtension runtime message 사용 (sandbox 환경용)
+        // Use WebExtension runtime message (for sandboxed environments)
         if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.sendMessage) {
-            console.log('🎯 browser.runtime.sendMessage 사용');
+            console.log('🎯 Using browser.runtime.sendMessage');
             try {
                 const response = await browser.runtime.sendMessage({ type: 'refsense-get-settings' });
-                console.log('✅ Runtime 응답 수신:', response);
+                console.log('✅ Received runtime response:', response);
                 
                 if (response.success && response.settings) {
                     this.applySettings(response.settings);
                     return;
                 }
             } catch (error) {
-                console.error('❌ browser.runtime.sendMessage 실패:', error);
+                console.error('❌ browser.runtime.sendMessage failed:', error);
             }
         }
         
-        // 직접 Zotero.Prefs API 사용 시도 (fallback)
-        console.log('🔍 Zotero 객체 확인:', typeof Zotero);
+        // Try using Zotero.Prefs API directly (fallback)
+        console.log('🔍 Checking Zotero object:', typeof Zotero);
         if (typeof Zotero !== 'undefined' && Zotero.Prefs) {
-            console.log('🎯 직접 Zotero.Prefs로 로드');
+            console.log('🎯 Loading directly via Zotero.Prefs');
             try {
                 const settings = {
                     aiBackend: Zotero.Prefs.get('extensions.refsense.aiBackend', 'openai'),
@@ -42,11 +42,11 @@ const RefSensePrefs = {
                     pageSource: Zotero.Prefs.get('extensions.refsense.pageSource', 'first'),
                     pageRange: Zotero.Prefs.get('extensions.refsense.pageRange', '1-2')
                 };
-                console.log('✅ 설정 로드 완료:', settings);
+                console.log('✅ Settings loaded successfully:', settings);
                 this.applySettings(settings);
                 return;
             } catch (error) {
-                console.error('❌ Zotero.Prefs 로드 실패:', error);
+                console.error('❌ Failed to load via Zotero.Prefs:', error);
             }
         }
         
@@ -68,7 +68,7 @@ const RefSensePrefs = {
             try {
                 document.getElementById('openai-api-key').value = atob(encodedKey);
             } catch (e) {
-                console.error('API 키 디코딩 실패:', e);
+                console.error('Failed to decode API key:', e);
             }
         }
 
@@ -90,11 +90,11 @@ const RefSensePrefs = {
     },
 
     bindEvents() {
-        console.log('🔗 이벤트 바인딩 시작');
+        console.log('🔗 Starting event binding');
         
-        // 저장 버튼 확인
+        // Check save button
         const saveButton = document.getElementById('save-button');
-        console.log('💾 저장 버튼 찾기:', saveButton ? '성공' : '실패');
+        console.log('💾 Save button lookup:', saveButton ? 'found' : 'missing');
         
         document.getElementById('ai-backend').addEventListener('change', () => {
             this.updateUIVisibility();
@@ -118,7 +118,7 @@ const RefSensePrefs = {
 
         if (saveButton) {
             saveButton.addEventListener('click', () => {
-                console.log('🖱️ 저장 버튼 클릭 이벤트 발생');
+                console.log('🖱️ Save button click event triggered');
                 this.saveSettings();
             });
         }
@@ -126,7 +126,7 @@ const RefSensePrefs = {
         document.getElementById('cancel-button').addEventListener('click', () => this.cancelChanges());
         document.getElementById('reset-button').addEventListener('click', () => this.resetToDefaults());
         
-        console.log('✅ 이벤트 바인딩 완료');
+        console.log('✅ Event binding complete');
     },
 
     updateUIVisibility() {
@@ -150,7 +150,7 @@ const RefSensePrefs = {
     },
 
     async saveSettings() {
-        console.log('💾 저장 버튼 클릭됨');
+        console.log('💾 Save button clicked');
         
         const apiKey = document.getElementById('openai-api-key').value.trim();
         const encodedKey = apiKey ? btoa(apiKey) : '';
@@ -165,49 +165,49 @@ const RefSensePrefs = {
             pageRange: document.getElementById('page-range').value
         };
 
-        console.log('📤 설정 전송:', settings);
+        console.log('📤 Sending settings:', settings);
         
-        // WebExtension runtime message 사용 (sandbox 환경용)
+        // Use WebExtension runtime message (for sandboxed environments)
         if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.sendMessage) {
-            console.log('🎯 browser.runtime.sendMessage로 저장');
+            console.log('🎯 Saving via browser.runtime.sendMessage');
             try {
                 const response = await browser.runtime.sendMessage({ 
                     type: 'refsense-save-settings', 
                     settings 
                 });
-                console.log('✅ Runtime 저장 응답:', response);
+                console.log('✅ Received runtime save response:', response);
                 
                 if (response.success) {
                     this.hasChanges = false;
                     this.updateButtonStates();
-                    this.showMessage('설정이 저장되었습니다.', 'success');
+                    this.showMessage('Settings have been saved.', 'success');
                     return;
                 } else {
-                    this.showMessage('설정 저장 실패: ' + response.error, 'error');
+                    this.showMessage('Failed to save settings: ' + response.error, 'error');
                     return;
                 }
             } catch (error) {
-                console.error('❌ browser.runtime.sendMessage 저장 실패:', error);
-                this.showMessage('설정 저장 실패: ' + error.message, 'error');
+                console.error('❌ browser.runtime.sendMessage save failed:', error);
+                this.showMessage('Failed to save settings: ' + error.message, 'error');
             }
         }
         
-        // 직접 Zotero.Prefs API 사용 시도 (fallback)
+        // Try using Zotero.Prefs API directly (fallback)
         if (typeof Zotero !== 'undefined' && Zotero.Prefs) {
-            console.log('🎯 직접 Zotero.Prefs로 저장');
+            console.log('🎯 Saving directly with Zotero.Prefs');
             try {
                 Object.keys(settings).forEach(key => {
                     const prefKey = `extensions.refsense.${key}`;
                     Zotero.Prefs.set(prefKey, settings[key]);
-                    console.log(`✅ 저장: ${prefKey} = ${settings[key]}`);
+                    console.log(`✅ Saved: ${prefKey} = ${settings[key]}`);
                 });
                 
                 this.hasChanges = false;
                 this.updateButtonStates();
-                this.showMessage('설정이 저장되었습니다.', 'success');
+                this.showMessage('Settings have been saved.', 'success');
                 return;
             } catch (error) {
-                console.error('❌ Zotero.Prefs 저장 실패:', error);
+                console.error('❌ Failed to save via Zotero.Prefs:', error);
             }
         }
         
@@ -224,11 +224,11 @@ const RefSensePrefs = {
         this.updateUIVisibility();
         this.hasChanges = false;
         this.updateButtonStates();
-        this.showMessage('변경사항이 취소되었습니다.', 'info');
+        this.showMessage('Changes have been canceled.', 'info');
     },
 
     resetToDefaults() {
-        if (!confirm('모든 설정을 기본값으로 복원하시겠습니까?')) return;
+        if (!confirm('Restore all settings to their default values?')) return;
 
         document.getElementById('ai-backend').value = 'openai';
         document.getElementById('openai-model').value = 'gpt-4-turbo';
@@ -240,21 +240,21 @@ const RefSensePrefs = {
 
         this.updateUIVisibility();
         this.markChanged();
-        this.showMessage('기본값으로 복원되었습니다.', 'info');
+        this.showMessage('Restored to default values.', 'info');
     },
 
     testOpenAI() {
         const apiKey = document.getElementById('openai-api-key').value.trim();
-        if (!apiKey) return this.showMessage('OpenAI API 키를 입력해주세요.', 'error');
-        if (!apiKey.startsWith('sk-')) return this.showMessage('API 키는 sk-로 시작해야 합니다.', 'error');
-        this.showMessage('API 키 형식이 올바릅니다.', 'success');
+        if (!apiKey) return this.showMessage('Please enter the OpenAI API key.', 'error');
+        if (!apiKey.startsWith('sk-')) return this.showMessage('The API key must start with sk-.', 'error');
+        this.showMessage('API key format is valid.', 'success');
     },
 
     testOllama() {
         const host = document.getElementById('ollama-host').value.trim();
-        if (!host) return this.showMessage('Ollama 호스트를 입력해주세요.', 'error');
-        if (!host.startsWith('http://') && !host.startsWith('https://')) return this.showMessage('http:// 또는 https://로 시작해야 합니다.', 'error');
-        this.showMessage('Ollama 호스트 형식이 올바릅니다.', 'success');
+        if (!host) return this.showMessage('Please enter the Ollama host.', 'error');
+        if (!host.startsWith('http://') && !host.startsWith('https://')) return this.showMessage('The host must start with http:// or https://.', 'error');
+        this.showMessage('Ollama host format is valid.', 'success');
     },
 
     showMessage(msg, type = 'info') {
@@ -262,22 +262,22 @@ const RefSensePrefs = {
     }
 };
 
-// 메시지 리스너
+// Message listener
 window.addEventListener('message', (event) => {
-    console.log('📩 메시지 수신:', event.data);
+    console.log('📩 Message received:', event.data);
     
     if (event.data.type === 'refsense-settings-response') {
-        console.log('⚙️ 설정 응답 수신');
+        console.log('⚙️ Received settings response');
         RefSensePrefs.applySettings(event.data.settings);
     }
     if (event.data.type === 'refsense-save-response') {
-        console.log('💾 저장 응답 수신:', event.data.success);
+        console.log('💾 Received save response:', event.data.success);
         if (event.data.success) {
             RefSensePrefs.hasChanges = false;
             RefSensePrefs.updateButtonStates();
-            RefSensePrefs.showMessage('설정이 저장되었습니다.', 'success');
+            RefSensePrefs.showMessage('Settings have been saved.', 'success');
         } else {
-            RefSensePrefs.showMessage('설정 저장 실패', 'error');
+            RefSensePrefs.showMessage('Failed to save settings', 'error');
         }
     }
 });

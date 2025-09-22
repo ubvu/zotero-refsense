@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <script>
-        // RefSense 설정 UI 컨트롤러
+        // RefSense settings UI controller
         var RefSensePrefs = {
             init() {
                 this.loadSettings();
@@ -10,21 +10,21 @@
             
             loadSettings() {
                 try {
-                    // AI 백엔드 설정
+                    // AI backend settings
                     const aiBackend = Zotero.Prefs.get('extensions.refsense.aiBackend', 'openai');
                     document.getElementById('ai-backend').value = aiBackend;
                     
-                    // OpenAI 설정
+                    // OpenAI settings
                     const openaiModel = Zotero.Prefs.get('extensions.refsense.openaiModel', 'gpt-4-turbo');
                     document.getElementById('openai-model').value = openaiModel;
                     
-                    // Ollama 설정  
+                    // Ollama settings  
                     const ollamaModel = Zotero.Prefs.get('extensions.refsense.ollamaModel', 'llama3.2:latest');
                     const ollamaHost = Zotero.Prefs.get('extensions.refsense.ollamaHost', 'http://localhost:11434');
                     document.getElementById('ollama-model').value = ollamaModel;
                     document.getElementById('ollama-host').value = ollamaHost;
                     
-                    // 페이지 추출 설정
+                    // Page extraction settings
                     const pageSource = Zotero.Prefs.get('extensions.refsense.defaultPageSource', 'first');
                     const pageRange = Zotero.Prefs.get('extensions.refsense.pageRange', '1-2');
                     document.getElementById('page-source').value = pageSource;
@@ -32,24 +32,24 @@
                     
                     this.updateUIVisibility();
                 } catch (error) {
-                    console.error('설정 로드 실패:', error);
+                    console.error('Failed to load settings:', error);
                 }
             },
             
             bindEvents() {
-                // AI 백엔드 변경 시 UI 업데이트
+                // Update UI when AI backend changes
                 document.getElementById('ai-backend').addEventListener('command', () => {
                     this.updateUIVisibility();
                     this.saveSettings();
                 });
                 
-                // 페이지 소스 변경 시 UI 업데이트
+                // Update UI when page source changes
                 document.getElementById('page-source').addEventListener('command', () => {
                     this.updateUIVisibility();
                     this.saveSettings();
                 });
                 
-                // 모든 입력 필드에 change 이벤트 바인딩
+                // Bind change events to all input fields
                 const inputs = ['openai-model', 'openai-api-key', 'ollama-model', 'ollama-host', 'page-range'];
                 inputs.forEach(id => {
                     const element = document.getElementById(id);
@@ -58,7 +58,7 @@
                     }
                 });
                 
-                // 테스트 버튼
+                // Test buttons
                 document.getElementById('test-openai').addEventListener('command', () => this.testOpenAI());
                 document.getElementById('test-ollama').addEventListener('command', () => this.testOllama());
             },
@@ -67,17 +67,17 @@
                 const aiBackend = document.getElementById('ai-backend').value;
                 const pageSource = document.getElementById('page-source').value;
                 
-                // AI 백엔드별 섹션 표시/숨김
+                // Show or hide sections per AI backend
                 document.getElementById('openai-section').hidden = (aiBackend !== 'openai');
                 document.getElementById('ollama-section').hidden = (aiBackend !== 'ollama');
                 
-                // 페이지 범위 입력 활성화/비활성화
+                // Enable or disable page range input
                 document.getElementById('page-range').disabled = (pageSource !== 'range');
             },
             
             saveSettings() {
                 try {
-                    // 모든 설정 저장
+                    // Save all settings
                     Zotero.Prefs.set('extensions.refsense.aiBackend', document.getElementById('ai-backend').value);
                     Zotero.Prefs.set('extensions.refsense.openaiModel', document.getElementById('openai-model').value);
                     Zotero.Prefs.set('extensions.refsense.ollamaModel', document.getElementById('ollama-model').value);
@@ -85,49 +85,49 @@
                     Zotero.Prefs.set('extensions.refsense.defaultPageSource', document.getElementById('page-source').value);
                     Zotero.Prefs.set('extensions.refsense.pageRange', document.getElementById('page-range').value);
                     
-                    // API 키는 Base64 인코딩하여 저장
+                    // Store API key as Base64
                     const apiKey = document.getElementById('openai-api-key').value.trim();
                     if (apiKey) {
                         const encodedKey = btoa(apiKey);
                         Zotero.Prefs.set('extensions.refsense.openaiApiKey', encodedKey);
                     }
                 } catch (error) {
-                    console.error('설정 저장 실패:', error);
+                    console.error('Failed to save settings:', error);
                 }
             },
             
             async testOpenAI() {
                 const apiKey = document.getElementById('openai-api-key').value.trim();
                 if (!apiKey) {
-                    this.showMessage('OpenAI API 키를 입력해주세요.', 'error');
+                    this.showMessage('Please enter the OpenAI API key.', 'error');
                     return;
                 }
                 
                 if (!apiKey.startsWith('sk-')) {
-                    this.showMessage('OpenAI API 키는 sk-로 시작해야 합니다.', 'error');
+                    this.showMessage('The OpenAI API key must start with sk-.', 'error');
                     return;
                 }
                 
-                this.showMessage('API 키 형식이 올바릅니다.', 'success');
+                this.showMessage('API key format is valid.', 'success');
             },
             
             async testOllama() {
                 const host = document.getElementById('ollama-host').value.trim();
                 if (!host) {
-                    this.showMessage('Ollama 호스트를 입력해주세요.', 'error');
+                    this.showMessage('Please enter the Ollama host.', 'error');
                     return;
                 }
                 
                 try {
-                    // Ollama 연결 테스트 (간단한 형식 검증)
+                    // Ollama connection test (basic format validation)
                     if (!host.startsWith('http://') && !host.startsWith('https://')) {
-                        this.showMessage('호스트는 http:// 또는 https://로 시작해야 합니다.', 'error');
+                        this.showMessage('The host must start with http:// or https://.', 'error');
                         return;
                     }
                     
-                    this.showMessage('Ollama 호스트 형식이 올바릅니다.', 'success');
+                    this.showMessage('Ollama host format is valid.', 'success');
                 } catch (error) {
-                    this.showMessage('연결 테스트 실패: ' + error.message, 'error');
+                    this.showMessage('Connection test failed: ' + error.message, 'error');
                 }
             },
             
@@ -140,29 +140,29 @@
             }
         };
         
-        // 페이지 로드 완료 시 초기화
+        // Initialize after the page finishes loading
         window.addEventListener('load', () => RefSensePrefs.init());
     </script>
     
     <groupbox>
-        <caption label="RefSense AI 메타데이터 추출기"/>
-        
-        <!-- AI 백엔드 선택 -->
+        <caption label="RefSense AI Metadata Extractor"/>
+
+        <!-- AI backend selection -->
         <hbox align="center">
-            <label value="AI 백엔드:" style="min-width: 100px;"/>
+            <label value="AI backend:" style="min-width: 100px;"/>
             <menulist id="ai-backend" style="min-width: 150px;">
                 <menupopup>
                     <menuitem label="OpenAI (GPT)" value="openai"/>
-                    <menuitem label="Ollama (로컬)" value="ollama"/>
+                    <menuitem label="Ollama (Local)" value="ollama"/>
                 </menupopup>
             </menulist>
         </hbox>
         
         <separator style="margin: 10px 0;"/>
         
-        <!-- OpenAI 설정 섹션 -->
+        <!-- OpenAI settings section -->
         <groupbox id="openai-section">
-            <caption label="OpenAI 설정"/>
+            <caption label="OpenAI Settings"/>
             
             <grid>
                 <columns>
@@ -172,15 +172,15 @@
                 </columns>
                 <rows>
                     <row align="center">
-                        <label value="API 키:"/>
+                        <label value="API key:"/>
                         <textbox id="openai-api-key" 
                                 placeholder="sk-..."
                                 type="password"
                                 style="min-width: 300px;"/>
-                        <button id="test-openai" label="테스트"/>
+                        <button id="test-openai" label="Test"/>
                     </row>
                     <row align="center">
-                        <label value="모델:"/>
+                        <label value="Model:"/>
                         <menulist id="openai-model" style="min-width: 200px;">
                             <menupopup>
                                 <menuitem label="GPT-4 Turbo" value="gpt-4-turbo"/>
@@ -194,13 +194,13 @@
             </grid>
             
             <description style="margin-top: 5px;">
-                OpenAI 계정(https://platform.openai.com)에서 발급받은 API 키를 입력하세요.
+                Enter the API key issued from your OpenAI account (https://platform.openai.com).
             </description>
         </groupbox>
         
-        <!-- Ollama 설정 섹션 -->
+        <!-- Ollama settings section -->
         <groupbox id="ollama-section" hidden="true">
-            <caption label="Ollama 설정"/>
+            <caption label="Ollama Settings"/>
             
             <grid>
                 <columns>
@@ -210,14 +210,14 @@
                 </columns>
                 <rows>
                     <row align="center">
-                        <label value="호스트:"/>
+                        <label value="Host:"/>
                         <textbox id="ollama-host" 
                                 placeholder="http://localhost:11434"
                                 style="min-width: 300px;"/>
-                        <button id="test-ollama" label="테스트"/>
+                        <button id="test-ollama" label="Test"/>
                     </row>
                     <row align="center">
-                        <label value="모델:"/>
+                        <label value="Model:"/>
                         <textbox id="ollama-model" 
                                 placeholder="llama3.2:latest"
                                 style="min-width: 200px;"/>
@@ -227,15 +227,15 @@
             </grid>
             
             <description style="margin-top: 5px;">
-                로컬에서 실행 중인 Ollama 서버 정보를 입력하세요. (https://ollama.ai)
+                Enter the details of your locally running Ollama server. (https://ollama.ai)
             </description>
         </groupbox>
         
         <separator style="margin: 10px 0;"/>
         
-        <!-- 페이지 추출 설정 -->
+        <!-- Page extraction settings -->
         <groupbox>
-            <caption label="PDF 페이지 추출 설정"/>
+            <caption label="PDF Page Extraction Settings"/>
             
             <grid>
                 <columns>
@@ -244,17 +244,17 @@
                 </columns>
                 <rows>
                     <row align="center">
-                        <label value="추출 페이지:"/>
+                        <label value="Page to extract:"/>
                         <menulist id="page-source" style="min-width: 150px;">
                             <menupopup>
-                                <menuitem label="첫 페이지" value="first"/>
-                                <menuitem label="현재 페이지" value="current"/>
-                                <menuitem label="페이지 범위" value="range"/>
+                                <menuitem label="First page" value="first"/>
+                                <menuitem label="Current page" value="current"/>
+                                <menuitem label="Page range" value="range"/>
                             </menupopup>
                         </menulist>
                     </row>
                     <row align="center">
-                        <label value="페이지 범위:"/>
+                        <label value="Page range:"/>
                         <textbox id="page-range" 
                                 placeholder="1-2"
                                 disabled="true"
@@ -264,23 +264,23 @@
             </grid>
             
             <description style="margin-top: 5px;">
-                기본적으로 첫 페이지에서 서지정보를 추출합니다.
+                By default, metadata is extracted from the first page.
             </description>
         </groupbox>
         
         <separator style="margin: 10px 0;"/>
         
-        <!-- 사용법 안내 -->
+        <!-- Usage guide -->
         <groupbox>
-            <caption label="사용법"/>
+            <caption label="How to Use"/>
             <description>
-                1. PDF 파일을 Zotero에서 열기
+                1. Open the PDF in Zotero.
             </description>
             <description>
-                2. 키보드 단축키 Ctrl+Shift+E 또는 우상단 RefSense 버튼 클릭
+                2. Press Ctrl+Shift+E or click the RefSense button in the top-right corner.
             </description>
             <description>
-                3. AI가 메타데이터를 추출하여 parent 아이템 자동 생성
+                3. Let the AI extract metadata and automatically create the parent item.
             </description>
         </groupbox>
     </groupbox>

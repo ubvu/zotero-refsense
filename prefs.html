@@ -135,28 +135,28 @@
 </head>
 <body>
     <div class="section">
-        <div class="section-title">RefSense AI 메타데이터 추출기</div>
+        <div class="section-title">RefSense AI Metadata Extractor</div>
         
         <div class="form-row">
-            <label>AI 백엔드:</label>
+            <label>AI backend:</label>
             <select id="ai-backend">
                 <option value="openai">OpenAI (GPT)</option>
-                <option value="ollama">Ollama (로컬)</option>
+                <option value="ollama">Ollama (Local)</option>
             </select>
         </div>
     </div>
 
     <div class="section" id="openai-section">
-        <div class="section-title">OpenAI 설정</div>
+        <div class="section-title">OpenAI Settings</div>
         
         <div class="form-row">
-            <label>API 키:</label>
+            <label>API key:</label>
             <input type="password" id="openai-api-key" placeholder="sk-...">
-            <button id="test-openai">테스트</button>
+            <button id="test-openai">Test</button>
         </div>
         
         <div class="form-row">
-            <label>모델:</label>
+            <label>Model:</label>
             <select id="openai-model">
                 <option value="gpt-4-turbo">GPT-4 Turbo</option>
                 <option value="gpt-4">GPT-4</option>
@@ -165,64 +165,64 @@
         </div>
         
         <div class="description">
-            OpenAI 계정(https://platform.openai.com)에서 발급받은 API 키를 입력하세요.
+            Enter the API key issued from your OpenAI account (https://platform.openai.com).
         </div>
     </div>
 
     <div class="section hidden" id="ollama-section">
-        <div class="section-title">Ollama 설정</div>
+        <div class="section-title">Ollama Settings</div>
         
         <div class="form-row">
-            <label>호스트:</label>
+            <label>Host:</label>
             <input type="text" id="ollama-host" placeholder="http://localhost:11434">
-            <button id="test-ollama">테스트</button>
+            <button id="test-ollama">Test</button>
         </div>
         
         <div class="form-row">
-            <label>모델:</label>
+            <label>Model:</label>
             <input type="text" id="ollama-model" placeholder="llama3.2:latest">
         </div>
         
         <div class="description">
-            로컬에서 실행 중인 Ollama 서버 정보를 입력하세요. (https://ollama.ai)
+            Enter the details of your locally running Ollama server. (https://ollama.ai)
         </div>
     </div>
 
     <div class="section">
-        <div class="section-title">PDF 페이지 추출 설정</div>
+        <div class="section-title">PDF Page Extraction Settings</div>
         
         <div class="form-row">
-            <label>추출 페이지:</label>
+            <label>Page to extract:</label>
             <select id="page-source">
-                <option value="first">첫 페이지</option>
-                <option value="current">현재 페이지</option>
-                <option value="range">페이지 범위</option>
+                <option value="first">First page</option>
+                <option value="current">Current page</option>
+                <option value="range">Page range</option>
             </select>
         </div>
         
         <div class="form-row">
-            <label>페이지 범위:</label>
+            <label>Page range:</label>
             <input type="text" id="page-range" placeholder="1-2" disabled>
         </div>
         
         <div class="description">
-            기본적으로 첫 페이지에서 서지정보를 추출합니다.
+            By default, metadata is extracted from the first page.
         </div>
     </div>
 
     <div class="section">
-        <div class="section-title">사용법</div>
+        <div class="section-title">How to Use</div>
         <ol class="usage-steps">
-            <li>1. PDF 파일을 Zotero에서 열기</li>
-            <li>2. 키보드 단축키 Ctrl+Shift+E 또는 우상단 RefSense 버튼 클릭</li>
-            <li>3. AI가 메타데이터를 추출하여 parent 아이템 자동 생성</li>
+            <li>1. Open the PDF in Zotero.</li>
+            <li>2. Press Ctrl+Shift+E or click the RefSense button in the top-right corner.</li>
+            <li>3. Let the AI extract metadata and automatically create the parent item.</li>
         </ol>
     </div>
 
     <div class="button-row">
-        <button id="reset-button" class="button-secondary">기본값 복원</button>
-        <button id="cancel-button" class="button-secondary">취소</button>
-        <button id="save-button" class="button-primary">저장</button>
+        <button id="reset-button" class="button-secondary">Restore defaults</button>
+        <button id="cancel-button" class="button-secondary">Cancel</button>
+        <button id="save-button" class="button-primary">Save</button>
     </div>
 
     <script src="prefs-script.js"></script>

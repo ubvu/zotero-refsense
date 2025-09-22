@@ -11,7 +11,7 @@ A powerful Zotero 7 plugin that extracts bibliographic metadata from PDF files u
 
 ### 📋 **Item List Context Menu**
 - **Smart Menu**: Right-click context menu for PDFs without parent items
-- **Contextual Display**: "📄 RefSense: 서지정보 추출" menu appears only for applicable PDFs
+- **Contextual Display**: "📄 RefSense: Extract Bibliographic Info" menu appears only for applicable PDFs
 - **Multi-Selection**: Supports selecting from multiple PDFs when multiple items are chosen
 - **Unified Workflow**: Same extraction process as PDF reader integration
 
@@ -83,7 +83,7 @@ A powerful Zotero 7 plugin that extracts bibliographic metadata from PDF files u
 
 **Method 2: Item List Context Menu**
 1. **Right-click a PDF** in Zotero's item list (must be a PDF without existing parent item)
-2. **Select "📄 RefSense: 서지정보 추출"** from the context menu
+2. **Select "📄 RefSense: Extract Bibliographic Info"** from the context menu
 3. **Choose PDF** if multiple PDFs are selected (selection dialog appears)
 4. **Wait for extraction** - same AI processing as PDF reader method
 5. **Review and confirm** - create parent item without opening the PDF
@@ -98,7 +98,7 @@ When a PDF already has a parent item (rare cases where button appears), RefSense
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ 메타데이터 비교 선택                                       │
+│ Metadata comparison selection                              │
 │                                                        │
 │ ┌─────────┬─────────────────┬─────────────────────────┐   │
 │ │ Field   │ Existing Value  │ New Extracted Value     │   │

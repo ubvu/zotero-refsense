@@ -47,7 +47,7 @@ RefSense.Plugin = {
             // Register custom preferences menu (Zotero 7 way)
             this.registerCustomPreferences();
             
-            // 전역 접근을 위한 추가 등록
+            // Additional registration for global access
             this.setupGlobalAccess();
             
             // Initialize UI components with multiple retries
@@ -68,22 +68,22 @@ RefSense.Plugin = {
         this.log('RefSense plugin loaded successfully');
     },
     
-    // Register custom preferences menu (직접 접근 방식)
+    // Register custom preferences menu (direct access approach)
     registerCustomPreferences() {
         try {
             this.log('Setting up custom preferences menu');
             
-            // 설정 변경 감지를 위한 옵저버 등록
+            // Register observer to detect preference changes
             if (Zotero.Prefs && typeof Zotero.Prefs.registerObserver === 'function') {
                 const prefBranch = 'extensions.refsense.';
                 Zotero.Prefs.registerObserver(prefBranch, () => {
-                    this.log('RefSense 설정이 변경되었습니다');
+                    this.log('RefSense settings have changed');
                     this.loadConfig();
                 }, false);
                 this.log('✅ Preferences observer registered');
             }
             
-            // Tools 메뉴에 설정 메뉴 추가
+            // Add settings menu to the Tools menu
             this.addToolsMenuItem();
             
             this.log('✅ Custom preferences setup completed');
@@ -96,7 +96,7 @@ RefSense.Plugin = {
         }
     },
     
-    // Tools 메뉴에 RefSense 설정 메뉴 추가
+    // Add the RefSense settings menu to Tools
     addToolsMenuItem() {
         try {
             this.log('🔍 Attempting to add Tools menu item...');
@@ -119,7 +119,7 @@ RefSense.Plugin = {
             if (!toolsMenu) {
                 this.log('❌ Tools menu not found, trying alternative selectors...');
                 
-                // 대체 셀렉터들 시도
+                // Try alternative selectors
                 const alternatives = [
                     'toolsPopup',
                     'menu_Tools', 
@@ -148,29 +148,29 @@ RefSense.Plugin = {
         }
     },
     
-    // 메뉴 요소에 메뉴 아이템 추가
+    // Add menu item to the provided menu element
     addMenuToElement(menuElement) {
         try {
-            // 기존 메뉴 아이템이 있는지 확인
+            // Check whether a menu item already exists
             const existingItem = menuElement.querySelector('#refsense-settings-menuitem');
             if (existingItem) {
                 this.log('⚠️ RefSense menu item already exists, removing old one');
                 existingItem.remove();
             }
             
-            // RefSense 설정 메뉴 아이템 생성
+            // Create the RefSense settings menu item
             const menuItem = menuElement.ownerDocument.createXULElement('menuitem');
             menuItem.id = 'refsense-settings-menuitem';
-            menuItem.setAttribute('label', 'RefSense 설정...');
+            menuItem.setAttribute('label', 'RefSense Settings...');
             menuItem.addEventListener('command', () => {
                 this.openSettingsDialog();
             });
             
-            // 구분자 추가 (옵션)
+            // Optionally add a separator
             const separator = menuElement.ownerDocument.createXULElement('menuseparator');
             separator.id = 'refsense-separator';
             
-            // Tools 메뉴에 추가
+            // Append to the Tools menu
             menuElement.appendChild(separator);
             menuElement.appendChild(menuItem);
             
@@ -183,7 +183,7 @@ RefSense.Plugin = {
         }
     },
     
-    // 설정 다이얼로그 열기
+    // Open the settings dialog
     openSettingsDialog() {
         try {
             this.log('Opening RefSense settings dialog');
@@ -194,7 +194,7 @@ RefSense.Plugin = {
                 return;
             }
             
-            // HTML 기반 설정창 다이얼로그 열기
+            // Open the HTML-based settings dialog
             this.openCustomSettingsDialog();
             
         } catch (error) {
@@ -202,105 +202,95 @@ RefSense.Plugin = {
         }
     },
     
-    // 간단한 통합 설정 다이얼로그
+    // Simplified unified settings dialog
     openCustomSettingsDialog() {
         try {
             const window = Zotero.getMainWindow();
             
-            // 현재 설정 로드
+            // Load the current settings
             this.loadConfig();
             
-            // 모든 설정을 하나의 폼으로 받기
+            // Present all settings through a single form
             this.showUnifiedSettingsPrompt();
             
         } catch (error) {
             this.log('❌ Failed to open settings dialog:', error.message);
             const window = Zotero.getMainWindow();
             if (window) {
-                window.alert('설정을 열 수 없습니다: ' + error.message);
+                window.alert('Unable to open settings: ' + error.message);
             }
         }
     },
     
-    // 통합 설정 프롬프트
+    // Unified settings prompt
     showUnifiedSettingsPrompt() {
         const window = Zotero.getMainWindow();
         if (!window) return;
         
-        // 현재 설정값 표시
+        // Display current setting values
         const currentApiKey = this.config.openaiApiKey ? 
-            (this.config.openaiApiKey.length > 10 ? '****' + this.config.openaiApiKey.slice(-4) : '[설정됨]') : '[없음]';
+            (this.config.openaiApiKey.length > 10 ? '****' + this.config.openaiApiKey.slice(-4) : '[Configured]') : '[None]';
         
-        const currentSettings = `현재 RefSense 설정:
-
-• AI 백엔드: ${this.config.aiBackend}
-• OpenAI API 키: ${currentApiKey}
-• OpenAI 모델: ${this.config.openaiModel}
-• Ollama 호스트: ${this.config.ollama_host}
-• Ollama 모델: ${this.config.ollama_model}
-• 페이지 소스: ${this.config.defaultPageSource}
-• 페이지 범위: ${this.config.pageRange}
-
-설정을 변경하시겠습니까?`;
+        const currentSettings = `Current RefSense settings:\n\n• AI backend: ${this.config.aiBackend}\n• OpenAI API key: ${currentApiKey}\n• OpenAI model: ${this.config.openaiModel}\n• Ollama host: ${this.config.ollama_host}\n• Ollama model: ${this.config.ollama_model}\n• Page source: ${this.config.defaultPageSource}\n• Page range: ${this.config.pageRange}\n\nWould you like to change these settings?`;
 
         if (!window.confirm(currentSettings)) return;
         
-        // 1. AI 백엔드 선택
+        // 1. Select AI backend
         const backends = ['openai', 'ollama'];
         let backendChoice = window.prompt(
-            `AI 백엔드를 선택하세요:\n1. OpenAI (GPT)\n2. Ollama (로컬)\n\n현재: ${this.config.aiBackend}\n숫자를 입력하세요 (1-2):`,
+            `Select the AI backend:\n1. OpenAI (GPT)\n2. Ollama (Local)\n\nCurrent: ${this.config.aiBackend}\nEnter a number (1-2):`,
             this.config.aiBackend === 'openai' ? '1' : '2'
         );
         
-        if (backendChoice === null) return; // 취소
+        if (backendChoice === null) return; // Cancelled
         backendChoice = backendChoice.trim();
         if (!['1', '2'].includes(backendChoice)) {
-            window.alert('잘못된 선택입니다.');
+            window.alert('Invalid choice.');
             return;
         }
         
         const selectedBackend = backends[parseInt(backendChoice) - 1];
         
-        // 2. 백엔드별 설정
+        // 2. Configure backend-specific options
         let newSettings = { aiBackend: selectedBackend };
         
         if (selectedBackend === 'openai') {
-            // OpenAI 설정
+            // OpenAI settings
             const apiKey = window.prompt(
-                `OpenAI API 키를 입력하세요 (sk-로 시작):\n현재: ${currentApiKey}\n\n(빈 값으로 두면 기존 키 유지)`,
+                `Enter the OpenAI API key (must start with sk-):\nCurrent: ${currentApiKey}\n\n(Leave blank to keep the existing key)`,
                 ''
             );
             
-            if (apiKey === null) return; // 취소
+            if (apiKey === null) return; // Cancelled
             
             if (apiKey.trim()) {
                 if (!apiKey.startsWith('sk-')) {
-                    window.alert('API 키는 sk-로 시작해야 합니다.');
+                    window.alert('The API key must start with sk-.');
                     return;
                 }
                 newSettings.openaiApiKey = btoa(apiKey.trim());
             } else {
-                newSettings.openaiApiKey = this.config.openaiApiKey; // 기존 값 유지
+                newSettings.openaiApiKey = this.config.openaiApiKey; // keep existing value
             }
             
             const models = ['gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
             const modelChoice = window.prompt(
-                `OpenAI 모델을 선택하세요:\n1. GPT-4 Turbo (권장)\n2. GPT-4\n3. GPT-3.5 Turbo\n\n현재: ${this.config.openaiModel}\n숫자를 입력하세요 (1-3):`,
+                `Select the OpenAI model:\n1. GPT-4 Turbo (recommended)\n2. GPT-4\n3. GPT-3.5 Turbo\n\nCurrent: ${this.config.openaiModel}\nEnter a number (1-3):`,
                 models.indexOf(this.config.openaiModel) + 1 || '1'
             );
             
             if (modelChoice === null) return;
             const modelIndex = parseInt(modelChoice.trim()) - 1;
             if (modelIndex < 0 || modelIndex >= models.length) {
-                window.alert('잘못된 모델 선택입니다.');
+                window.alert('Invalid model selection.');
                 return;
             }
             newSettings.openaiModel = models[modelIndex];
             
         } else {
-            // Ollama 설정
+            // Ollama settings
             const ollamaHost = window.prompt(
-                `Ollama 호스트 URL을 입력하세요:\n현재: ${this.config.ollama_host}`,
+                `Enter the Ollama host URL:\nCurrent: ${this.config.ollama_host}`,
                 this.config.ollama_host
             );
             
@@ -308,7 +298,7 @@ RefSense.Plugin = {
             newSettings.ollamaHost = ollamaHost.trim() || 'http://localhost:11434';
             
             const ollamaModel = window.prompt(
-                `Ollama 모델명을 입력하세요:\n현재: ${this.config.ollama_model}`,
+                `Enter the Ollama model name:\nCurrent: ${this.config.ollama_model}`,
                 this.config.ollama_model
             );
             
@@ -316,49 +306,49 @@ RefSense.Plugin = {
             newSettings.ollamaModel = ollamaModel.trim() || 'llama3.2:latest';
         }
         
-        // 3. 페이지 추출 설정
+        // 3. Page extraction settings
         const pageSources = ['first', 'current', 'range'];
         const pageChoice = window.prompt(
-            `PDF 페이지 추출 방식을 선택하세요:\n1. 첫 페이지 (권장)\n2. 현재 페이지\n3. 페이지 범위\n\n현재: ${this.config.defaultPageSource}\n숫자를 입력하세요 (1-3):`,
+            `Choose the PDF page extraction mode:\n1. First page (recommended)\n2. Current page\n3. Page range\n\nCurrent: ${this.config.defaultPageSource}\nEnter a number (1-3):`,
             pageSources.indexOf(this.config.defaultPageSource) + 1 || '1'
         );
         
         if (pageChoice === null) return;
         const pageIndex = parseInt(pageChoice.trim()) - 1;
         if (pageIndex < 0 || pageIndex >= pageSources.length) {
-            window.alert('잘못된 페이지 옵션 선택입니다.');
+            window.alert('Invalid page option.');
             return;
         }
         newSettings.defaultPageSource = pageSources[pageIndex];
         
         if (newSettings.defaultPageSource === 'range') {
             const pageRange = window.prompt(
-                `페이지 범위를 입력하세요 (예: 1-2):\n현재: ${this.config.pageRange}`,
+                `Enter the page range (e.g., 1-2):\nCurrent: ${this.config.pageRange}`,
                 this.config.pageRange
             );
             
             if (pageRange === null) return;
             newSettings.pageRange = pageRange.trim() || '1-2';
         } else {
-            newSettings.pageRange = this.config.pageRange; // 기존 값 유지
+            newSettings.pageRange = this.config.pageRange; // keep existing value
         }
         
-        // 4. 설정 저장
+        // 4. Save settings
         this.saveSettingsFromDialog(newSettings);
-        window.alert('✅ 설정이 저장되었습니다!');
+        window.alert('✅ Settings have been saved!');
     },
     
-    // 다이얼로그에서 설정 저장
+    // Save settings from the dialog
     saveSettingsFromDialog(settings) {
         try {
-            this.log('💾 다이얼로그에서 설정 저장 중...');
+            this.log('💾 Saving settings from dialog...');
             
-            // 모든 설정 저장
+            // Persist each setting
             Object.keys(settings).forEach(key => {
                 let prefKey;
                 let value = settings[key];
                 
-                // 키 매핑
+                // Key mapping
                 if (key === 'ollamaHost') {
                     prefKey = 'extensions.refsense.ollamaHost';
                 } else if (key === 'ollamaModel') {
@@ -370,34 +360,34 @@ RefSense.Plugin = {
                 }
                 
                 Zotero.Prefs.set(prefKey, value);
-                this.log(`✅ 저장: ${prefKey} = ${value}`);
+                this.log(`✅ Saved: ${prefKey} = ${value}`);
             });
             
-            // 설정 다시 로드
+            // Reload settings
             this.loadConfig();
             
-            this.log('✅ 다이얼로그 설정 저장 완료');
+            this.log('✅ Dialog settings saved successfully');
             
-            // 성공 알림
+            // Success notification
             const window = Zotero.getMainWindow();
             if (window) {
-                window.alert('RefSense 설정이 저장되었습니다.');
+                window.alert('RefSense settings have been saved.');
             }
             
         } catch (error) {
-            this.log('❌ 다이얼로그 설정 저장 실패:', error.message);
+            this.log('❌ Dialog settings save failed:', error.message);
         }
     },
     
-    // 간단한 설정 다이얼로그 (Zotero 7 호환)
+    // Simple settings dialog (Zotero 7 compatible)
     showSimpleSettingsDialog() {
         try {
             const window = Zotero.getMainWindow();
             
-            // 현재 설정값 가져오기 (this.config 사용)
-            this.log('🔍 설정값 로드 시작...');
+            // Retrieve current settings (using this.config)
+            this.log('🔍 Starting settings load...');
             
-            // 먼저 최신 설정을 로드
+            // Load the latest settings first
             this.loadConfig();
             
             const currentSettings = {
@@ -409,43 +399,34 @@ RefSense.Plugin = {
                 pageSource: this.config.defaultPageSource
             };
             
-            // 각 설정값 개별 로그
-            this.log('📋 로드된 설정값들:');
+            // Log each setting individually
+            this.log('📋 Loaded settings:');
             this.log(`  - aiBackend: "${currentSettings.aiBackend}"`);
-            this.log(`  - openaiApiKey: "${currentSettings.openaiApiKey ? '[설정됨]' : '[없음]'}"`);
+            this.log(`  - openaiApiKey: "${currentSettings.openaiApiKey ? '[Configured]' : '[None]'}"`);
             this.log(`  - openaiModel: "${currentSettings.openaiModel}"`);
             this.log(`  - ollamaHost: "${currentSettings.ollamaHost}"`);
             this.log(`  - ollamaModel: "${currentSettings.ollamaModel}"`);
             this.log(`  - pageSource: "${currentSettings.pageSource}"`);
             
-            // API 키 디코딩 (있는 경우)
-            let apiKeyDisplay = '[없음]';
+            // Decode API key if present
+            let apiKeyDisplay = '[None]';
             if (currentSettings.openaiApiKey) {
                 try {
                     const decodedKey = atob(currentSettings.openaiApiKey);
                     apiKeyDisplay = `${decodedKey.substring(0, 8)}...`;
                 } catch (e) {
-                    apiKeyDisplay = '[인코딩 오류]';
+                    apiKeyDisplay = '[Encoding error]';
                 }
             }
             
-            // 현재 설정 표시 메시지
-            let settingsText = `현재 RefSense 설정:
-
-• AI 백엔드: ${currentSettings.aiBackend}
-• OpenAI API 키: ${apiKeyDisplay}
-• OpenAI 모델: ${currentSettings.openaiModel}
-• Ollama 호스트: ${currentSettings.ollamaHost}
-• Ollama 모델: ${currentSettings.ollamaModel}
-• 페이지 소스: ${currentSettings.pageSource}
-
-설정을 변경하시겠습니까?`;
+            // Build message showing the current settings
+            let settingsText = `Current RefSense settings:\n\n• AI backend: ${currentSettings.aiBackend}\n• OpenAI API key: ${apiKeyDisplay}\n• OpenAI model: ${currentSettings.openaiModel}\n• Ollama host: ${currentSettings.ollamaHost}\n• Ollama model: ${currentSettings.ollamaModel}\n• Page source: ${currentSettings.pageSource}\n\nWould you like to update these settings?`;
             
-            // Zotero 7 호환 confirm 다이얼로그
+            // Zotero 7 compatible confirm dialog
             const result = window.confirm(settingsText);
             
             if (result) {
-                // 상세 설정창 열기
+                // Open detailed settings dialog
                 this.showDetailedSettingsDialog(currentSettings);
             }
             
@@ -454,61 +435,61 @@ RefSense.Plugin = {
         }
     },
     
-    // 상세 설정 다이얼로그 (Zotero 7 호환)
+    // Detailed settings dialog (Zotero 7 compatible)
     showDetailedSettingsDialog(currentSettings) {
         try {
             const window = Zotero.getMainWindow();
             
-            // AI 백엔드 선택
-            const backendChoice = window.confirm('AI 백엔드를 선택하세요:\n\n확인 = OpenAI\n취소 = Ollama');
+            // Select the AI backend
+            const backendChoice = window.confirm('Choose the AI backend:\n\nOK = OpenAI\nCancel = Ollama');
             const selectedBackend = backendChoice ? 'openai' : 'ollama';
             
-            this.log(`🔧 선택된 백엔드: ${selectedBackend}`);
+            this.log(`🔧 Selected backend: ${selectedBackend}`);
             
             if (selectedBackend === 'openai') {
-                // OpenAI 설정
-                const apiKey = window.prompt('OpenAI API 키를 입력하세요:', '');
+                // OpenAI settings
+                const apiKey = window.prompt('Enter the OpenAI API key:', '');
                 
                 if (apiKey && apiKey.trim()) {
-                    // API 키 인코딩하여 저장
+                    // Encode the API key before saving
                     const encodedKey = btoa(apiKey.trim());
                     
-                    this.log('💾 OpenAI 설정 저장 중...');
+                    this.log('💾 Saving OpenAI settings...');
                     Zotero.Prefs.set('extensions.refsense.aiBackend', 'openai');
                     Zotero.Prefs.set('extensions.refsense.openaiApiKey', encodedKey);
                     
-                    // 저장 확인
+                    // Confirm saved values
                     const savedBackend = Zotero.Prefs.get('extensions.refsense.aiBackend');
                     const savedKey = Zotero.Prefs.get('extensions.refsense.openaiApiKey');
-                    this.log(`✅ 저장 확인 - aiBackend: "${savedBackend}", apiKey 길이: ${savedKey.length}`);
+                    this.log(`✅ Verified save - aiBackend: "${savedBackend}", API key length: ${savedKey.length}`);
                     
-                    this.log('OpenAI 설정이 저장되었습니다');
-                    window.alert('OpenAI 설정이 저장되었습니다.');
+                    this.log('OpenAI settings have been saved');
+                    window.alert('OpenAI settings have been saved.');
                 }
             } else {
-                // Ollama 설정
-                const host = window.prompt('Ollama 호스트 URL을 입력하세요:', currentSettings.ollamaHost);
+                // Ollama settings
+                const host = window.prompt('Enter the Ollama host URL:', currentSettings.ollamaHost);
                 
                 if (host && host.trim()) {
-                    this.log('💾 Ollama 설정 저장 중...');
+                    this.log('💾 Saving Ollama settings...');
                     Zotero.Prefs.set('extensions.refsense.aiBackend', 'ollama');
                     Zotero.Prefs.set('extensions.refsense.ollamaHost', host.trim());
                     
-                    // 저장 확인
+                    // Confirm saved values
                     const savedBackend = Zotero.Prefs.get('extensions.refsense.aiBackend');
                     const savedHost = Zotero.Prefs.get('extensions.refsense.ollamaHost');
-                    this.log(`✅ 저장 확인 - aiBackend: "${savedBackend}", ollamaHost: "${savedHost}"`);
+                    this.log(`✅ Verified save - aiBackend: "${savedBackend}", ollamaHost: "${savedHost}"`);
                     
-                    this.log('Ollama 설정이 저장되었습니다');
-                    window.alert('Ollama 설정이 저장되었습니다.');
+                    this.log('Ollama settings have been saved');
+                    window.alert('Ollama settings have been saved.');
                 }
             }
-            
-            // 설정 다시 로드 (3초 지연으로 저장 완료 보장)
+
+            // Reload settings (3-second delay to ensure persistence)
             setTimeout(() => {
-                this.log('🔄 지연된 설정 재로드 시작...');
+                this.log('🔄 Starting delayed settings reload...');
                 this.loadConfig();
-                this.log('🔄 지연된 설정 재로드 완료');
+                this.log('🔄 Delayed settings reload complete');
             }, 3000);
             
         } catch (error) {
@@ -517,24 +498,24 @@ RefSense.Plugin = {
     },
     
     
-    // 직접적인 메시지 리스너 설정 (Zotero Main Window에 등록)
+    // Direct message listener setup (registered on the Zotero main window)
     setupDirectMessageListener() {
         try {
-            // Zotero 메인 UI 창에 메시지 리스너 등록
+            // Register a message listener on the Zotero main UI window
             const ZoteroPane = Zotero.getMainWindow();
             
             if (ZoteroPane && ZoteroPane.addEventListener) {
                 ZoteroPane.addEventListener("message", (event) => {
                     if (!event.data || !event.data.type) return;
                     
-                    this.log('[RefSense bootstrap] 받은 메시지:', event.data.type);
+                    this.log('[RefSense bootstrap] Received message:', event.data.type);
                     
                     const { type, settings } = event.data;
                     
                     if (type === "refsense-get-settings") {
                         this.log('Processing get-settings request from main window');
                         
-                        // 설정 읽기 (통합된 설정 키 사용)
+                        // Read settings (using the unified setting keys)
                         const result = {
                             aiBackend: Zotero.Prefs.get("extensions.refsense.aiBackend", "openai"),
                             openaiModel: Zotero.Prefs.get("extensions.refsense.openaiModel", "gpt-4-turbo"),
@@ -561,14 +542,14 @@ RefSense.Plugin = {
                         
                         if (settings) {
                             try {
-                                // 설정 저장
+                                // Persist the provided settings
                                 Object.keys(settings).forEach(key => {
                                     const prefKey = `extensions.refsense.${key}`;
                                     Zotero.Prefs.set(prefKey, settings[key]);
                                     this.log(`Saved: ${prefKey} = ${settings[key]}`);
                                 });
                                 
-                                // 설정 새로고침
+                                // Refresh settings
                                 this.loadConfig();
                                 
                                 if (event.source) {
@@ -606,7 +587,7 @@ RefSense.Plugin = {
         }
     },
     
-    // 연결 테스트 처리
+    // Handle connection tests
     handleConnectionTest(event) {
         const { backend, config } = event.data;
         
@@ -627,16 +608,16 @@ RefSense.Plugin = {
                 event.source.postMessage({
                     type: 'refsense-test-response',
                     success: isValid,
-                    message: isValid ? 'OpenAI API 키 형식이 올바릅니다!' : 'OpenAI API 키 형식이 올바르지 않습니다.'
+                    message: isValid ? 'OpenAI API key format is valid!' : 'OpenAI API key format is invalid.'
                 }, event.origin || "*");
                 this.log('OpenAI test response sent');
             }
         }
     },
     
-    // 직접 메시지 처리 (메인 윈도우용)
+    // Direct message handler (main window)
     handleDirectMessage(event) {
-        // setupDirectMessageListener와 동일한 로직
+        // Same logic as setupDirectMessageListener
         const { type, settings } = event.data || {};
         
         if (type === "refsense-get-settings") {
@@ -683,15 +664,15 @@ RefSense.Plugin = {
         }
     },
     
-    // 메인 윈도우에 메시지 리스너 설정
+    // Register message listeners on the main window
     setupMainWindowMessageListener(win) {
         try {
-            // 기존 리스너 제거
+            // Remove existing listener
             if (win._refSenseMainMessageListener) {
                 win.removeEventListener('message', win._refSenseMainMessageListener);
             }
             
-            // 새 메시지 리스너 등록
+            // Register new message listener
             win._refSenseMainMessageListener = (event) => {
                 this.log('Main window received message:', event.data?.type);
                 this.handlePostMessage(event);
@@ -705,15 +686,15 @@ RefSense.Plugin = {
         }
     },
     
-    // 일반 윈도우에 메시지 리스너 설정
+    // Register message listeners on non-main windows
     setupWindowMessageListener(win) {
         try {
-            // 기존 리스너 제거
+            // Remove existing listener
             if (win._refSenseWindowMessageListener) {
                 win.removeEventListener('message', win._refSenseWindowMessageListener);
             }
             
-            // 새 메시지 리스너 등록
+            // Register new message listener
             win._refSenseWindowMessageListener = (event) => {
                 this.log('Window received message:', event.data?.type);
                 this.handlePostMessage(event);
@@ -727,10 +708,10 @@ RefSense.Plugin = {
         }
     },
     
-    // postMessage 이벤트 처리
+    // Handle postMessage events
     handlePostMessage(event) {
         try {
-            // 보안: 메시지 검증
+            // Security: validate messages
             if (!event.data || !event.data.type || !event.data.type.startsWith('refsense-')) {
                 return;
             }
@@ -781,18 +762,18 @@ RefSense.Plugin = {
         }
     },
     
-    // 전역 접근 설정
+    // Configure global access
     setupGlobalAccess() {
         try {
             this.log('Setting up global access for preferences');
             
-            // Zotero 객체에 직접 등록
+            // Register directly on the Zotero object
             if (typeof Zotero !== 'undefined') {
                 Zotero.RefSense = this;
                 this.log('✅ Zotero.RefSense registered');
             }
             
-            // 전역 객체에 등록 (다중 접근)
+            // Register on the global object (multiple access points)
             if (typeof globalThis !== 'undefined') {
                 globalThis.RefSense = RefSense;
                 globalThis.RefSensePlugin = this;
@@ -805,7 +786,7 @@ RefSense.Plugin = {
                 this.log('✅ window.RefSense registered');
             }
             
-            // 메인 윈도우에도 등록
+            // Also register on the main window
             try {
                 const mainWindow = Zotero.getMainWindow();
                 if (mainWindow) {
@@ -822,7 +803,7 @@ RefSense.Plugin = {
         }
     },
     
-    // 모든 윈도우에 메시지 리스너 추가
+    // Add message listeners to all windows
     addMessageListenerToAllWindows() {
         try {
             const windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
@@ -840,15 +821,15 @@ RefSense.Plugin = {
         }
     },
     
-    // 특정 윈도우에 메시지 리스너 추가
+    // Add message listener to a specific window
     addMessageListenerToWindow(win) {
         try {
-            // 이미 리스너가 있으면 제거
+            // Remove existing listener if present
             if (win._refSenseMessageListener) {
                 win.removeEventListener('message', win._refSenseMessageListener);
             }
             
-            // 새 리스너 추가
+            // Add the new listener
             win._refSenseMessageListener = (event) => {
                 this.handlePreferencesMessage(event);
             };
@@ -861,11 +842,11 @@ RefSense.Plugin = {
         }
     },
     
-    // nsIWindowWatcher 인터페이스 구현
+    // Implement nsIWindowWatcher interface
     observe(subject, topic, data) {
         if (topic === 'domwindowopened') {
             try {
-                // 새 윈도우가 열릴 때 리스너 추가
+                // Add listener when a new window opens
                 const win = subject;
                 if (win && win.addEventListener) {
                     win.addEventListener('load', () => {
@@ -903,14 +884,14 @@ RefSense.Plugin = {
     // Handle messages from preferences window
     handlePreferencesMessage(event) {
         try {
-            // 보안: 메시지 검증
+            // Security: validate incoming messages
             if (!event.data || !event.data.type || !event.data.type.startsWith('refsense-')) {
                 return;
             }
             
-            // 보안: origin 확인 (chrome://zotero 또는 moz-extension://)
+            // Security: verify origin (chrome://zotero or moz-extension://)
             if (!event.origin.startsWith('chrome://') && !event.origin.startsWith('moz-extension://')) {
-                this.log('❌ 허용되지 않은 origin에서 메시지:', event.origin);
+                this.log('❌ Message from disallowed origin:', event.origin);
                 return;
             }
             
@@ -1045,7 +1026,7 @@ RefSense.Plugin = {
                     source.postMessage({
                         type: 'refsense-test-response',
                         success: isValid,
-                        message: isValid ? 'OpenAI API 키 형식이 올바릅니다!' : 'OpenAI API 키 형식이 올바르지 않습니다.'
+                        message: isValid ? 'OpenAI API key format is valid!' : 'OpenAI API key format is invalid.'
                     }, origin);
                     this.log('Test response sent for OpenAI');
                 }
@@ -1078,18 +1059,18 @@ RefSense.Plugin = {
                                 const modelCount = data.models ? data.models.length : 0;
                                 resolve({
                                     success: true,
-                                    message: `Ollama 연결 성공! (설치된 모델: ${modelCount}개)`
+                                    message: `Ollama connection successful! Installed models: ${modelCount}`
                                 });
                             } catch (parseError) {
                                 resolve({
                                     success: true,
-                                    message: 'Ollama 연결 성공!'
+                                    message: 'Ollama connection successful!'
                                 });
                             }
                         } else {
                             resolve({
                                 success: false,
-                                message: `Ollama 서버 응답 오류: ${xhr.status}`
+                                message: `Ollama server response error: ${xhr.status}`
                             });
                         }
                     }
@@ -1097,12 +1078,12 @@ RefSense.Plugin = {
                 
                 xhr.onerror = () => resolve({
                     success: false,
-                    message: 'Ollama 연결 실패: 네트워크 오류'
+                    message: 'Ollama connection failed: network error'
                 });
                 
                 xhr.ontimeout = () => resolve({
                     success: false,
-                    message: 'Ollama 연결 실패: 타임아웃'
+                    message: 'Ollama connection failed: timeout'
                 });
                 
                 xhr.send();
@@ -1110,7 +1091,7 @@ RefSense.Plugin = {
             } catch (error) {
                 resolve({
                     success: false,
-                    message: `Ollama 연결 실패: ${error.message}`
+                    message: `Ollama connection failed: ${error.message}`
                 });
             }
         });
@@ -1123,20 +1104,20 @@ RefSense.Plugin = {
         
         // Clean up message listeners
         try {
-            // 메인 윈도우 리스너 정리
+    // Clean up listener on the main window
             const mainWindow = Zotero.getMainWindow();
             if (mainWindow && mainWindow._refSenseMainMessageListener) {
                 mainWindow.removeEventListener('message', mainWindow._refSenseMainMessageListener);
                 delete mainWindow._refSenseMainMessageListener;
             }
             
-            // 현재 윈도우 리스너 정리
+    // Clean up listener on the current window
             if (typeof window !== 'undefined' && window._refSenseWindowMessageListener) {
                 window.removeEventListener('message', window._refSenseWindowMessageListener);
                 delete window._refSenseWindowMessageListener;
             }
             
-            // 기존 방식 정리
+    // Clean up legacy approach
             const windowWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                                            .getService(Components.interfaces.nsIWindowWatcher);
             windowWatcher.unregisterNotification(this);
@@ -1167,37 +1148,37 @@ RefSense.Plugin = {
     // Load configuration from Zotero preferences (updated for integrated settings)
     loadConfig() {
         try {
-            this.log('📥 loadConfig() 호출됨');
+            this.log('📥 loadConfig() invoked');
             
-            // 실제 저장된 값들을 먼저 확인
+            // Check the stored values first
             const rawBackend = Zotero.Prefs.get('extensions.refsense.aiBackend');
             const rawOllamaHost = Zotero.Prefs.get('extensions.refsense.ollamaHost');
             
             this.log(`📥 Raw values: aiBackend="${rawBackend}", ollamaHost="${rawOllamaHost}"`);
             
             this.config = {
-                // AI 백엔드 설정
+                // AI backend settings
                 aiBackend: rawBackend || 'openai',
                 
-                // OpenAI 설정
+                // OpenAI settings
                 openaiModel: Zotero.Prefs.get('extensions.refsense.openaiModel') || 'gpt-4-turbo',
                 openaiApiKey: Zotero.Prefs.get('extensions.refsense.openaiApiKey') || '',
                 
-                // Ollama 설정
+                // Ollama settings
                 ollama_model: Zotero.Prefs.get('extensions.refsense.ollamaModel') || 'llama3.2:latest',
                 ollama_host: Zotero.Prefs.get('extensions.refsense.ollamaHost') || 'http://localhost:11434',
                 
-                // PDF 추출 설정
+                // PDF extraction settings
                 defaultPageSource: Zotero.Prefs.get('extensions.refsense.defaultPageSource') || 'first',
                 pageRange: Zotero.Prefs.get('extensions.refsense.pageRange') || '1-2',
                 
-                // 기타 설정
+                // Other settings
                 enableLogging: Zotero.Prefs.get('extensions.refsense.enableLogging') !== false,
                 maxRetries: Zotero.Prefs.get('extensions.refsense.maxRetries') || 3,
                 requestTimeout: Zotero.Prefs.get('extensions.refsense.requestTimeout') || 30000
             };
             
-            // API 키 디코딩 (Base64로 저장됨)
+            // Decode API key (stored as Base64)
             if (this.config.openaiApiKey) {
                 try {
                     this.config.openaiApiKey = atob(this.config.openaiApiKey);
@@ -1213,7 +1194,7 @@ RefSense.Plugin = {
             
         } catch (error) {
             this.log('Error loading configuration:', error.message);
-            // 기본값으로 fallback
+            // Fallback to defaults
             this.config = {
                 aiBackend: 'openai',
                 openaiModel: 'gpt-4-turbo',
@@ -1781,8 +1762,8 @@ RefSense.Plugin = {
                     
                     // Show error message
                     this.showMessage(
-                        'PDF 처리 실패',
-                        extractionResult.error || '알 수 없는 오류가 발생했습니다.',
+                        'PDF processing failed',
+                        extractionResult.error || 'An unknown error occurred.',
                         'error'
                     );
                 }
@@ -1806,7 +1787,7 @@ RefSense.Plugin = {
             // Show error to user
             if (reader._isContextMenu) {
                 // For context menu calls, show error differently
-                this.showError('RefSense 오류', `처리 중 오류가 발생했습니다: ${error.message}`);
+                this.showError('RefSense error', `An error occurred during processing: ${error.message}`);
             } else if (reader._window) {
                 reader._window.alert(`RefSense Error: ${error.message}`);
             }
@@ -1880,7 +1861,7 @@ RefSense.Plugin = {
                             result.success = true;
                         } else {
                             result.success = false;
-                            result.error = userDecision.error || '사용자가 취소했습니다';
+                            result.error = userDecision.error || 'User cancelled the operation';
                             this.log('User cancelled or operation failed');
                         }
                     } else {
@@ -1895,15 +1876,15 @@ RefSense.Plugin = {
                         } else {
                             // User cancelled
                             result.success = false;
-                            result.error = '사용자가 취소했습니다';
+                            result.error = 'User cancelled the operation';
                             this.log('User cancelled metadata creation');
                         }
                     }
                 } else {
                     // AI processing failed
                     result.success = false;
-                    result.error = aiResult ? aiResult.error : 'AI 결과가 없습니다';
-                    this.showMessage('AI 처리 실패', result.error, 'warning');
+                    result.error = aiResult ? aiResult.error : 'No AI result available';
+                    this.showMessage('AI processing failed', result.error, 'warning');
                 }
                 
             } else {
@@ -1913,7 +1894,7 @@ RefSense.Plugin = {
                 this.log('PDF content extraction failed:', result.error);
                 
                 // Show user-friendly message
-                this.showMessage('텍스트 추출 실패', '이 PDF에서 텍스트를 추출할 수 없습니다. 이미지 기반 PDF이거나 보호된 파일일 수 있습니다.', 'warning');
+                this.showMessage('Text extraction failed', 'RefSense could not extract text from this PDF. It may be image-based or protected.', 'warning');
             }
             
         } catch (error) {
@@ -1970,33 +1951,33 @@ RefSense.Plugin = {
                 { name: '6. File system access', func: () => this.extractViaFileSystemAccess(reader, pageNumber) }
             ];
             
-            this.log('=== 텍스트 추출 시도 시작 ===');
+            this.log('=== Beginning text extraction attempts ===');
             
             for (let i = 0; i < extractionMethods.length; i++) {
                 const { name, func } = extractionMethods[i];
                 try {
-                    this.log(`🔄 시도 중: ${name}`);
+                    this.log(`🔄 Attempting: ${name}`);
                     const methodResult = await func();
                     
                     if (methodResult.success && methodResult.text && methodResult.text.length > 20) {
-                        this.log(`✅ 성공: ${name} - 텍스트 길이: ${methodResult.text.length}자`);
-                        this.log(`📄 텍스트 미리보기: "${methodResult.text.substring(0, 100)}..."`);
-                        this.log('=== 텍스트 추출 완료 ===');
+                        this.log(`✅ Success: ${name} - text length: ${methodResult.text.length}`);
+                        this.log(`📄 Text preview: "${methodResult.text.substring(0, 100)}..."`);
+                        this.log('=== Text extraction complete ===');
                         return methodResult;
                     } else if (methodResult.text) {
-                        this.log(`⚠️ 부분 성공: ${name} - 텍스트가 너무 짧음 (${methodResult.text.length}자)`);
-                        this.log(`📄 짧은 텍스트: "${methodResult.text}"`);
+                        this.log(`⚠️ Partial success: ${name} - text too short (${methodResult.text.length})`);
+                        this.log(`📄 Short text: "${methodResult.text}"`);
                     } else {
-                        this.log(`❌ 실패: ${name} - 텍스트 없음`);
+                        this.log(`❌ Failure: ${name} - no text returned`);
                     }
                 } catch (error) {
-                    this.log(`❌ 오류: ${name} - ${error.message}`);
+                    this.log(`❌ Error: ${name} - ${error.message}`);
                 }
             }
             
             result.error = 'All text extraction methods failed';
-            this.log('❌ 모든 텍스트 추출 방법 실패');
-            this.log('=== 텍스트 추출 실패 ===');
+            this.log('❌ All text extraction methods failed');
+            this.log('=== Text extraction failed ===');
             
         } catch (error) {
             result.error = error.message;
@@ -2188,7 +2169,7 @@ RefSense.Plugin = {
         return result;
     },
     
-    // Method 1: Use Zotero Reader API directly (핵심 방법)
+    // Method 1: Use Zotero Reader API directly (primary approach)
     async extractViaZoteroReader(reader, pageNumber) {
         const result = { success: false, text: '', error: null };
         
@@ -2198,7 +2179,7 @@ RefSense.Plugin = {
             this.log('Reader prototype:', Object.getPrototypeOf(reader));
             this.log('Reader constructor:', reader.constructor.name);
             
-            // 더 깊이 들어가서 메서드 찾기
+            // Drill down to discover available methods
             const allMethods = [];
             let obj = reader;
             while (obj && obj !== Object.prototype) {
@@ -2214,7 +2195,7 @@ RefSense.Plugin = {
             }
             this.log('All available methods:', [...new Set(allMethods)]);
             
-            // _internalReader 확인
+            // Inspect _internalReader
             if (reader._internalReader) {
                 this.log('Found _internalReader:', Object.keys(reader._internalReader));
                 this.log('_internalReader methods:', Object.getOwnPropertyNames(reader._internalReader).filter(prop => 
@@ -2222,13 +2203,13 @@ RefSense.Plugin = {
                 ));
             }
             
-            // wrappedJSObject를 통한 직접 PDF.js 접근
+            // Direct PDF.js access via wrappedJSObject
             if (reader._iframeWindow && reader._iframeWindow.wrappedJSObject) {
                 try {
                     this.log('=== Accessing PDF.js via wrappedJSObject ===');
                     const wrappedWindow = reader._iframeWindow.wrappedJSObject;
                     
-                    // PDF.js PDFViewerApplication 접근
+                    // Access PDF.js PDFViewerApplication
                     if (wrappedWindow.PDFViewerApplication) {
                         const pdfApp = wrappedWindow.PDFViewerApplication;
                         this.log('PDFViewerApplication found');
@@ -2359,7 +2340,7 @@ RefSense.Plugin = {
                             }
                         }
                         
-                        // 🔍 Strategy 3: DOM-based textLayer extraction (강제 추출)
+                        // 🔍 Strategy 3: DOM-based textLayer extraction (forced extraction)
                         this.log('=== DOM-based textLayer extraction ===');
                         const targetDoc = wrappedWindow.document;
                         if (targetDoc) {
@@ -2395,13 +2376,13 @@ RefSense.Plugin = {
                 }
             }
             
-            // 직접적인 방법 1: _internalReader 를 통한 접근
+            // Direct approach 1: access through _internalReader
             if (reader._internalReader) {
                 try {
                     const internalReader = reader._internalReader;
                     this.log('Trying _internalReader methods...');
                     
-                    // _internalReader의 메서드들 시도
+                    // Try _internalReader methods
                     const internalMethods = ['getPageText', 'getText', 'getTextContent', 'extractText'];
                     for (const methodName of internalMethods) {
                         if (typeof internalReader[methodName] === 'function') {
@@ -2426,7 +2407,7 @@ RefSense.Plugin = {
                 }
             }
             
-            // 직접적인 방법 1b: reader.getPageText() 호출
+            // Direct approach 1b: invoke reader.getPageText()
             if (typeof reader.getPageText === 'function') {
                 try {
                     this.log(`Calling reader.getPageText(${pageNumber - 1}) [0-based indexing]`);
@@ -2444,14 +2425,14 @@ RefSense.Plugin = {
                 }
             }
             
-            // 직접적인 방법 2: getCurrentPageNumber(), getPageCount() 확인 후 재시도
+            // Direct approach 2: retry after checking getCurrentPageNumber() and getPageCount()
             if (typeof reader.getCurrentPageNumber === 'function') {
                 try {
                     const currentPage = await reader.getCurrentPageNumber();
                     const pageCount = typeof reader.getPageCount === 'function' ? await reader.getPageCount() : 'unknown';
                     this.log(`Current page: ${currentPage}, Total pages: ${pageCount}`);
                     
-                    // 현재 페이지로 다시 시도
+                    // Retry using the current page
                     if (typeof reader.getPageText === 'function') {
                         const currentPageText = await reader.getPageText(currentPage);
                         if (currentPageText && currentPageText.trim().length > 10) {
@@ -2466,9 +2447,9 @@ RefSense.Plugin = {
                 }
             }
             
-            // 직접적인 방법 3: reader의 실제 텍스트 추출 메서드들 (정확한 API)
+            // Direct approach 3: invoke reader text extraction methods (official APIs)
             const directMethods = [
-                'getPageText',  // 가장 가능성 높은 메서드
+                'getPageText',  // Most likely to exist
                 'getText',
                 'getTextContent', 
                 'extractPageText',
@@ -2496,21 +2477,21 @@ RefSense.Plugin = {
                 }
             }
             
-            // 직접적인 방법 4: reader.item 을 통한 정확한 Zotero Fulltext 접근
+            // Direct approach 4: use reader.item for accurate Zotero Fulltext access
             if (reader.item || reader._item) {
                 const item = reader.item || reader._item;
                 this.log('Trying via reader.item:', item.id);
                 
                 try {
-                    // Zotero.Fulltext의 정확한 사용법 확인
+                    // Verify correct Zotero.Fulltext usage
                     if (typeof Zotero !== 'undefined' && Zotero.Fulltext) {
                         this.log('Zotero.Fulltext available, trying different methods...');
                         
-                        // Method 1: 올바른 Zotero 7 Fulltext API 사용
+                        // Method 1: Use the official Zotero 7 Fulltext API
                         try {
-                            this.log('=== Zotero 7 Fulltext API 접근 ===');
+                            this.log('=== Accessing the Zotero 7 Fulltext API ===');
                             
-                            // Step 0: Zotero.Fulltext._fulltextCache.get() - 가장 확실한 방법!
+                            // Step 0: Zotero.Fulltext._fulltextCache.get() - most reliable option
                             try {
                                 if (typeof Zotero.Fulltext._fulltextCache !== 'undefined' && 
                                     typeof Zotero.Fulltext._fulltextCache.get === 'function') {
@@ -2540,11 +2521,11 @@ RefSense.Plugin = {
                                 this.log('_fulltextCache.get failed:', cacheMethodError.message);
                             }
                             
-                            // Step 1: 캐시된 fulltext 직접 접근 (파일 시스템)
+                            // Step 1: Read cached fulltext directly from the file system
                             try {
                                 const filePath = await item.getFilePathAsync();
                                 if (filePath) {
-                                    // .zotero-ft-cache 파일 경로 생성
+                                    // Build the .zotero-ft-cache file path
                                     const cacheFilePath = filePath.replace(/\.[^.]+$/, '') + '.zotero-ft-cache';
                                     this.log('Checking cache file:', cacheFilePath);
                                     
@@ -2572,7 +2553,7 @@ RefSense.Plugin = {
                                 this.log('Cache access method failed:', cacheAccessError.message);
                             }
                             
-                            // Step 2: Zotero 내부 fulltext 데이터베이스 접근
+                            // Step 2: Access Zotero's internal fulltext database
                             try {
                                 if (typeof Zotero.DB !== 'undefined') {
                                     const sql = "SELECT content FROM fulltextContent WHERE itemID = ?";
@@ -2591,11 +2572,11 @@ RefSense.Plugin = {
                                 this.log('DB fulltext access failed:', dbError.message);
                             }
                             
-                            // Step 3: Zotero.Fulltext API 올바른 사용법 탐색
+                            // Step 3: Explore correct Zotero.Fulltext API usage
                             if (typeof Zotero.Fulltext !== 'undefined') {
                                 this.log('Exploring Zotero.Fulltext methods:', Object.getOwnPropertyNames(Zotero.Fulltext).filter(prop => typeof Zotero.Fulltext[prop] === 'function'));
                                 
-                                // 실제 존재하는 메서드들 시도
+                                // Try methods that actually exist
                                 const realMethods = [
                                     () => Zotero.Fulltext.getTextFromCache(item.libraryID, item.id),
                                     () => Zotero.Fulltext.getItemContent(item.libraryID, item.id),
@@ -2866,14 +2847,14 @@ RefSense.Plugin = {
         const result = { success: false, text: '', error: null };
         
         try {
-            this.log('[Zotero API] 시작: Zotero Fulltext API 사용');
+            this.log('[Zotero API] Starting: Using Zotero Fulltext API');
             
             // Try to access the PDF via Zotero's internal systems
             if (typeof Zotero !== 'undefined' && Zotero.Fulltext) {
-                this.log('[Zotero API] Zotero.Fulltext 사용 가능');
+                this.log('[Zotero API] Zotero.Fulltext available');
                 const item = await Zotero.Items.getAsync(reader.itemID);
                 if (item && item.isAttachment()) {
-                    this.log(`[Zotero API] PDF 아이템 확인됨: ID ${item.id}`);
+                    this.log(`[Zotero API] PDF attachment found: ID ${item.id}`);
                     
                     // Try multiple fulltext methods
                     const methods = [
@@ -2885,39 +2866,39 @@ RefSense.Plugin = {
                     
                     for (const { name, func } of methods) {
                         try {
-                            this.log(`[Zotero API] 시도: ${name}`);
+                            this.log(`[Zotero API] Attempt: ${name}`);
                             const fulltext = await func();
-                            this.log(`[Zotero API] ${name} 결과:`, fulltext ? 'Found' : 'Empty', typeof fulltext);
+                            this.log(`[Zotero API] ${name} result:`, fulltext ? 'Found' : 'Empty', typeof fulltext);
                             
                             if (fulltext && fulltext.content && fulltext.content.trim().length > 50) {
                                 const content = fulltext.content.trim();
                                 result.success = true;
                                 result.text = content.substring(0, 5000); // Reasonable limit
-                                this.log(`[Zotero API] ✅ ${name} 성공: ${content.length}자`);
+                                this.log(`[Zotero API] ✅ ${name} success: ${content.length} chars`);
                                 return result;
                             } else if (fulltext && typeof fulltext === 'string' && fulltext.trim().length > 50) {
                                 result.success = true;
                                 result.text = fulltext.trim().substring(0, 5000);
-                                this.log(`[Zotero API] ✅ ${name} 문자열 성공: ${fulltext.length}자`);
+                                this.log(`[Zotero API] ✅ ${name} string success: ${fulltext.length} chars`);
                                 return result;
                             } else {
-                                this.log(`[Zotero API] ❌ ${name} 실패: 텍스트 부족`);
+                                this.log(`[Zotero API] ❌ ${name} failed: insufficient text`);
                             }
                         } catch (methodError) {
-                            this.log(`[Zotero API] ❌ ${name} 오류: ${methodError.message}`);
+                            this.log(`[Zotero API] ❌ ${name} error: ${methodError.message}`);
                         }
                     }
                     
                     // Try to trigger fulltext indexing if not available
                     try {
-                        this.log('[Zotero API] 인덱싱 시도 중...');
+                        this.log('[Zotero API] Attempting indexing...');
                         await Zotero.Fulltext.indexItems([item.id]);
                         
                         // Wait a bit and try again
-                        this.log('[Zotero API] 인덱싱 후 2초 대기...');
+                        this.log('[Zotero API] Waiting 2 seconds after indexing...');
                         await new Promise(resolve => setTimeout(resolve, 2000));
                         
-                        this.log('[Zotero API] 인덱싱 후 재시도...');
+                        this.log('[Zotero API] Retrying after indexing...');
                         
                         // Try different methods since getItemContent doesn't exist
                         const retryMethods = [
@@ -2932,28 +2913,28 @@ RefSense.Plugin = {
                         
                         for (const { name, func } of retryMethods) {
                             try {
-                                this.log(`[Zotero API] 재시도: ${name}`);
+                                this.log(`[Zotero API] Retry: ${name}`);
                                 const retryResult = await func();
-                                this.log(`[Zotero API] ${name} 결과:`, retryResult ? 'Found' : 'Empty', typeof retryResult);
+                                this.log(`[Zotero API] ${name} result:`, retryResult ? 'Found' : 'Empty', typeof retryResult);
                                 
                                 if (retryResult && retryResult.content && retryResult.content.trim().length > 50) {
                                     result.success = true;
                                     result.text = retryResult.content.trim().substring(0, 5000);
-                                    this.log(`[Zotero API] ✅ ${name} 인덱싱 후 성공: ${retryResult.content.length}자`);
+                                    this.log(`[Zotero API] ✅ ${name} post-indexing success: ${retryResult.content.length} chars`);
                                     return result;
                                 } else if (retryResult && typeof retryResult === 'string' && retryResult.trim().length > 50) {
                                     result.success = true;
                                     result.text = retryResult.trim().substring(0, 5000);
-                                    this.log(`[Zotero API] ✅ ${name} 인덱싱 후 문자열 성공: ${retryResult.length}자`);
+                                    this.log(`[Zotero API] ✅ ${name} post-indexing string success: ${retryResult.length} chars`);
                                     return result;
                                 }
                             } catch (retryError) {
-                                this.log(`[Zotero API] ❌ ${name} 재시도 오류: ${retryError.message}`);
+                                this.log(`[Zotero API] ❌ ${name} retry error: ${retryError.message}`);
                             }
                         }
                         
                     } catch (indexError) {
-                        this.log('[Zotero API] ❌ 인덱싱 실패:', indexError.message);
+                        this.log('[Zotero API] ❌ Indexing failed:', indexError.message);
                     }
                 }
             }
@@ -3009,7 +2990,7 @@ RefSense.Plugin = {
                                     const fileData = await OS.File.read(filePath);
                                     this.log('File data read, size:', fileData.byteLength);
                                     
-                                    // Try basic PDF text extraction (매우 간단한 방법)
+                                    // Try basic PDF text extraction (very simple approach)
                                     const textContent = this.extractTextFromPDFBuffer(fileData);
                                     if (textContent && textContent.length > 50 && this.isValidText(textContent)) {
                                         result.success = true;
@@ -3052,7 +3033,7 @@ RefSense.Plugin = {
         return result;
     },
     
-    // 텍스트 유효성 검증 (바이너리 쓰레기 필터링)
+    // Validate extracted text (filtering out binary noise)
     isValidText(text) {
         if (!text || typeof text !== 'string' || text.trim().length < 20) {
             return false;
@@ -3060,7 +3041,7 @@ RefSense.Plugin = {
         
         const cleanText = text.trim();
         
-        // 1. ASCII 제어 문자 비율 확인 (5% 이상이면 바이너리일 가능성)
+        // 1. Check ratio of ASCII control characters (over 5% suggests binary content)
         const controlCharCount = (cleanText.match(/[\x00-\x1F\x7F-\x9F]/g) || []).length;
         const controlCharRatio = controlCharCount / cleanText.length;
         if (controlCharRatio > 0.05) {
@@ -3068,10 +3049,10 @@ RefSense.Plugin = {
             return false;
         }
         
-        // 2. 읽을 수 있는 단어 비율 확인
+        // 2. Evaluate proportion of readable words
         const words = cleanText.split(/\s+/);
         const readableWords = words.filter(word => {
-            // 알파벳이나 숫자가 포함된 2자 이상의 단어
+            // Words with at least two characters containing letters or digits
             return word.length >= 2 && /[a-zA-Z0-9]/.test(word);
         });
         const readableRatio = readableWords.length / words.length;
@@ -3080,11 +3061,11 @@ RefSense.Plugin = {
             return false;
         }
         
-        // 3. 연속된 의미 없는 문자 패턴 확인
+        // 3. Detect repeated meaningless character patterns
         const gibberishPatterns = [
-            /[^\w\s]{10,}/g,  // 10개 이상 연속된 특수문자
-            /\b[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]{8,}\b/g,  // 8개 이상 연속된 자음
-            /\b\w{1,2}\s+\w{1,2}\s+\w{1,2}\s+\w{1,2}\s+\w{1,2}/g  // 너무 많은 1-2자 단어
+            /[^\w\s]{10,}/g,  // 10 or more consecutive special characters
+            /\b[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]{8,}\b/g,  // 8 or more consecutive consonants
+            /\b\w{1,2}\s+\w{1,2}\s+\w{1,2}\s+\w{1,2}\s+\w{1,2}/g  // Excessive runs of 1-2 letter words
         ];
         
         let gibberishCount = 0;
@@ -3101,7 +3082,7 @@ RefSense.Plugin = {
             return false;
         }
         
-        // 4. 학술 논문 특성 확인 (보너스 점수)
+        // 4. Look for academic paper characteristics (bonus score)
         const academicIndicators = [
             /\babstract\b/i,
             /\bintroduction\b/i,
@@ -3110,8 +3091,8 @@ RefSense.Plugin = {
             /\buniversity\b/i,
             /\bjournal\b/i,
             /\bdoi\b/i,
-            /\b(19|20)\d{2}\b/,  // 연도
-            /\b[A-Z][a-z]+,?\s+[A-Z]\.?\s*[A-Z]?[a-z]*\b/  // 저자명 패턴
+            /\b(19|20)\d{2}\b/,  // Year
+            /\b[A-Z][a-z]+,?\s+[A-Z]\.?\s*[A-Z]?[a-z]*\b/  // Author name pattern
         ];
         
         let academicScore = 0;
@@ -3121,28 +3102,28 @@ RefSense.Plugin = {
             }
         }
         
-        // 5. 최종 판정
+        // 5. Final determination
         const isValid = readableRatio >= 0.5 || academicScore >= 2;
         this.log(`Text validation: readable=${readableRatio.toFixed(2)}, control=${controlCharRatio.toFixed(2)}, gibberish=${gibberishRatio.toFixed(2)}, academic=${academicScore}, valid=${isValid}`);
         
         return isValid;
     },
     
-    // 매우 기본적인 PDF 텍스트 추출 (PDF 구조의 텍스트 스트림 검색)
+    // Very basic PDF text extraction (scan raw PDF streams)
     extractTextFromPDFBuffer(buffer) {
         try {
-            // ArrayBuffer를 String으로 변환
+            // Convert ArrayBuffer to string
             const uint8Array = new Uint8Array(buffer);
             let pdfString = '';
             
-            // UTF-8 디코딩 시도
+            // Attempt UTF-8 decoding
             try {
                 const decoder = new TextDecoder('utf-8', { fatal: false });
                 pdfString = decoder.decode(uint8Array);
             } catch (decodeError) {
-                // 바이너리를 직접 문자열로 변환 (fallback)
-                for (let i = 0; i < Math.min(uint8Array.length, 100000); i++) { // 처음 100KB만
-                    if (uint8Array[i] > 31 && uint8Array[i] < 127) { // ASCII 범위
+                // Convert binary data directly to string (fallback)
+                for (let i = 0; i < Math.min(uint8Array.length, 100000); i++) { // First 100KB only
+                    if (uint8Array[i] > 31 && uint8Array[i] < 127) { // ASCII range
                         pdfString += String.fromCharCode(uint8Array[i]);
                     } else {
                         pdfString += ' ';
@@ -3152,7 +3133,7 @@ RefSense.Plugin = {
             
             this.log('PDF string sample:', pdfString.substring(0, 200));
             
-            // PDF 텍스트 스트림 찾기 (매우 기본적인 방법)
+            // Locate PDF text streams (basic approach)
             const streamRegex = /stream\s*\n([\s\S]*?)\s*endstream/g;
             const textRegex = /\((.*?)\)/g;
             const tjRegex = /\[(.*?)\]/g;
@@ -3160,11 +3141,11 @@ RefSense.Plugin = {
             let extractedText = '';
             let match;
             
-            // stream...endstream 블록에서 텍스트 찾기
+            // Extract text inside stream...endstream blocks
             while ((match = streamRegex.exec(pdfString)) !== null) {
                 const streamContent = match[1];
                 
-                // 괄호 안의 텍스트 찾기 (Tj 연산자)
+                // Capture text within parentheses (Tj operator)
                 let textMatch;
                 while ((textMatch = textRegex.exec(streamContent)) !== null) {
                     const text = textMatch[1];
@@ -3173,7 +3154,7 @@ RefSense.Plugin = {
                     }
                 }
                 
-                // 배열 형태 텍스트 찾기 (TJ 연산자)
+                // Capture array-style text (TJ operator)
                 while ((textMatch = tjRegex.exec(streamContent)) !== null) {
                     const arrayContent = textMatch[1];
                     const stringParts = arrayContent.match(/\((.*?)\)/g);
@@ -3188,21 +3169,21 @@ RefSense.Plugin = {
                 }
             }
             
-            // 직접 텍스트 패턴 찾기 (stream 밖에서도)
+            // Directly search for text patterns outside streams
             const directTextMatches = pdfString.match(/\b[A-Z][a-z]+(?:\s+[A-Z]?[a-z]+)*\b/g);
             if (directTextMatches) {
-                for (const text of directTextMatches.slice(0, 100)) { // 처음 100개만
+                for (const text of directTextMatches.slice(0, 100)) { // First 100 matches only
                     if (text.length > 3 && /^[A-Za-z\s]+$/.test(text)) {
                         extractedText += text + ' ';
                     }
                 }
             }
             
-            // 텍스트 정리
+            // Clean up text
             extractedText = extractedText
                 .replace(/\s+/g, ' ')
                 .trim()
-                .substring(0, 3000); // 처음 3000자만
+                .substring(0, 3000); // Limit to the first 3000 characters
             
             this.log('Extracted text sample:', extractedText.substring(0, 200));
             return extractedText;
@@ -3226,12 +3207,12 @@ RefSense.Plugin = {
         try {
             this.log('Attempting image extraction from page:', pageNumber);
             
-            // 🎯 이미지 추출 방법들 (우선순위 순 - 강제 렌더링 최우선)
+            // 🎯 Image extraction strategies (ordered by priority - force rendering first)
             const imageMethods = [
-                () => this.extractImageViaPDFJS(reader, pageNumber), // 🥇 PDF.js 강제 렌더링 (HIGHEST)
-                () => this.extractImageViaExistingCanvas(reader, pageNumber), // 기존 렌더링된 캔버스 찾기
-                () => this.extractImageViaZoteroReader(reader, pageNumber), // Zotero API 직접 접근
-                () => this.extractImageViaScreenshot(reader, pageNumber) // DOM 스크린샷 (최후 대안)
+                () => this.extractImageViaPDFJS(reader, pageNumber), // 🥇 Force PDF.js rendering (highest priority)
+                () => this.extractImageViaExistingCanvas(reader, pageNumber), // Reuse existing rendered canvas
+                () => this.extractImageViaZoteroReader(reader, pageNumber), // Access via Zotero API directly
+                () => this.extractImageViaScreenshot(reader, pageNumber) // DOM screenshot (last resort)
             ];
             
             this.log('🔄 Starting image extraction with', imageMethods.length, 'methods...');
@@ -3266,14 +3247,14 @@ RefSense.Plugin = {
         return result;
     },
     
-    // Method 0: Direct Zotero Reader image extraction (개선된 핵심 방법)
+    // Method 0: Direct Zotero Reader image extraction (enhanced primary approach)
     async extractImageViaZoteroReader(reader, pageNumber) {
         const result = { success: false, imageDataUrl: null, width: 0, height: 0, error: null };
         
         try {
             this.log('=== Direct Zotero Reader Image Access ===');
             
-            // Step 1: _internalReader를 통한 이미지 접근
+            // Step 1: Access images via _internalReader
             if (reader._internalReader) {
                 try {
                     const internalReader = reader._internalReader;
@@ -3344,7 +3325,7 @@ RefSense.Plugin = {
         return result;
     },
     
-    // 이미지 데이터 처리 헬퍼 함수
+    // Helper for processing image data
     processImageData(imageData, result, methodName) {
         try {
             if (typeof imageData === 'string' && imageData.startsWith('data:image/')) {
@@ -3355,7 +3336,7 @@ RefSense.Plugin = {
                 return true;
                 
             } else if (imageData instanceof Blob) {
-                // Blob을 data URL로 변환
+                // Convert Blob to data URL
                 this.blobToDataURL(imageData).then(dataUrl => {
                     result.imageDataUrl = dataUrl;
                     result.success = true;
@@ -3373,7 +3354,7 @@ RefSense.Plugin = {
                 return true;
                 
             } else if (imageData && typeof imageData === 'object') {
-                // 다른 객체 타입들 확인
+                // Check for other object types
                 this.log(`${methodName} returned object:`, Object.keys(imageData));
                 
                 if (imageData.canvas) {
@@ -3402,7 +3383,7 @@ RefSense.Plugin = {
         }
     },
     
-    // Blob을 Data URL로 변환하는 헬퍼 함수
+    // Helper to convert Blob to data URL
     blobToDataURL(blob) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -3412,7 +3393,7 @@ RefSense.Plugin = {
         });
     },
     
-    // 🔍 Canvas 내용 검증 함수 - 실제 렌더링된 내용이 있는지 확인
+    // 🔍 Validate canvas contents to ensure real rendering occurred
     validateCanvasContent(canvas) {
         try {
             if (!canvas || canvas.width <= 0 || canvas.height <= 0) {
@@ -3420,9 +3401,9 @@ RefSense.Plugin = {
                 return false;
             }
             
-            // Canvas에서 픽셀 데이터 샘플링
+            // Sample pixel data from the canvas
             const context = canvas.getContext('2d');
-            const sampleSize = Math.min(canvas.width, canvas.height, 100); // 최대 100픽셀 샘플
+            const sampleSize = Math.min(canvas.width, canvas.height, 100); // Sample up to 100 pixels
             const imageData = context.getImageData(0, 0, sampleSize, sampleSize);
             const pixels = imageData.data;
             
@@ -3430,24 +3411,24 @@ RefSense.Plugin = {
             let nonWhitePixels = 0;
             let transparentPixels = 0;
             
-            // 픽셀 분석 (RGBA 형식)
+            // Analyze pixels (RGBA format)
             for (let i = 0; i < pixels.length; i += 4) {
                 const r = pixels[i];
                 const g = pixels[i + 1];
                 const b = pixels[i + 2];
                 const a = pixels[i + 3];
                 
-                // 투명 픽셀 카운트
+                // Count transparent pixels
                 if (a < 255) {
                     transparentPixels++;
                 }
                 
-                // 순백색이 아닌 픽셀 카운트 (약간의 여유값 포함)
+                // Count pixels that are not pure white (with a small tolerance)
                 if (r < 250 || g < 250 || b < 250) {
                     nonWhitePixels++;
                 }
                 
-                // 색상 변화량 측정
+                // Measure color variation
                 const brightness = (r + g + b) / 3;
                 colorVariation += Math.abs(brightness - 255);
             }
@@ -3465,10 +3446,10 @@ RefSense.Plugin = {
                 avgColorVariation: avgColorVariation.toFixed(2)
             });
             
-            // 검증 조건들
-            const hasContent = nonWhiteRatio > 0.01; // 1% 이상이 흰색이 아님
-            const hasVariation = avgColorVariation > 5; // 평균 색상 변화량이 5 이상
-            const notMostlyTransparent = transparentRatio < 0.9; // 90% 미만이 투명
+            // Validation thresholds
+            const hasContent = nonWhiteRatio > 0.01; // More than 1% of pixels are not white
+            const hasVariation = avgColorVariation > 5; // Average color variation greater than 5
+            const notMostlyTransparent = transparentRatio < 0.9; // Less than 90% transparent
             
             const isValid = hasContent && hasVariation && notMostlyTransparent;
             
@@ -3492,20 +3473,20 @@ RefSense.Plugin = {
         try {
             this.log('🚀 Starting enhanced PDF.js rendering approach...');
             
-            // 🕐 PDF 렌더링 완료 대기 (대폭 증가)
+            // 🕐 Wait for PDF rendering to finish (extended duration)
             this.log('⏳ Waiting for PDF rendering to complete...');
-            await new Promise(resolve => setTimeout(resolve, 5000)); // 5초 대기
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
             
-            // 🔍 더 광범위한 윈도우 접근 시도
+            // 🔍 Attempt broader window access
             const windows = [
                 reader._iframeWindow,
                 reader._window,
                 reader.iframe?.contentWindow,
                 reader.window,
-                // 추가 접근 방법들
+                // Additional access strategies
                 reader._iframe?.contentWindow,
                 reader.tabContainer?.querySelector('iframe')?.contentWindow,
-                // document.querySelector 제거 - 권한 문제
+                // Remove document.querySelector usage due to permission issues
                 null
             ].filter(w => w && w !== null);
             
@@ -3516,7 +3497,7 @@ RefSense.Plugin = {
                 this.log(`🪟 Trying window ${winIdx + 1}/${windows.length}`);
                 
                 try {
-                    // 🔐 wrappedJSObject 접근 강화
+                    // 🔐 Strengthen wrappedJSObject access
                     const wrappedWindow = targetWindow.wrappedJSObject || targetWindow;
                     
                     const pdfApps = [
@@ -3525,7 +3506,7 @@ RefSense.Plugin = {
                         targetWindow.parent?.PDFViewerApplication,
                         wrappedWindow.PDFViewerApplication,
                         wrappedWindow.window?.PDFViewerApplication,
-                        // 추가 접근 경로들
+                        // Additional access paths
                         targetWindow.contentWindow?.PDFViewerApplication,
                         targetWindow.document?.defaultView?.PDFViewerApplication
                     ].filter(app => app);
@@ -3540,7 +3521,7 @@ RefSense.Plugin = {
                             const pdfDoc = pdfApp.pdfDocument;
                             this.log(`✅ Found PDF.js document! Pages: ${pdfDoc.numPages}, Target page: ${pageNumber}`);
                             
-                            // 🔍 PDF 문서 상태 확인
+                            // 🔍 Check PDF document state
                             this.log('📊 PDF Document state:', {
                                 numPages: pdfDoc.numPages,
                                 fingerprint: pdfDoc.fingerprint || 'unknown',
@@ -3552,7 +3533,7 @@ RefSense.Plugin = {
                                 this.log(`📋 Attempting to get page ${pageNumber}...`);
                                 const page = await pdfDoc.getPage(pageNumber);
                                 
-                                // 🔍 페이지 객체 상태 및 API 탐색
+                                // 🔍 Explore page object state and APIs
                                 const pageProps = Object.getOwnPropertyNames(page);
                                 const pageMethods = pageProps.filter(prop => {
                                     try {
@@ -3572,7 +3553,7 @@ RefSense.Plugin = {
                                     prototype: Object.getPrototypeOf(page)?.constructor?.name
                                 });
                                 
-                                // 🔍 viewport 관련 메서드 탐색
+                                // 🔍 Explore viewport-related methods
                                 const viewportMethods = ['getViewport', 'getViewBox', 'view', 'mediaBox', 'rotate'];
                                 const availableViewportMethods = [];
                                 
@@ -3585,7 +3566,7 @@ RefSense.Plugin = {
                                 
                                 this.log('📊 Available viewport methods:', availableViewportMethods);
                                 
-                                // 🎯 강제 렌더링 접근법: PDF.js의 render() API 직접 사용
+                                // 🎯 Forced rendering approach: call the PDF.js render() API directly
                                 this.log('✅ Implementing enhanced forced PDF.js rendering approach');
                                 
                                 // Try multiple approaches for image rendering
@@ -3593,14 +3574,14 @@ RefSense.Plugin = {
                                     // Approach 1: Ultra high quality rendering with forced timeout
                                     async () => {
                                         this.log('🔄 Starting ultra high quality rendering...');
-                                        // 🔍 다양한 viewport 접근 방법 시도
+                                        // 🔍 Try different viewport approaches
                                         let viewport;
                                         
                                         if (typeof page.getViewport === 'function') {
                                             viewport = page.getViewport({ scale: 3.0 });
                                             this.log('✅ Using page.getViewport()');
                                         } else if (typeof page.view === 'object' && page.view) {
-                                            // 대체 viewport 생성
+                                            // Create alternate viewport
                                             const view = page.view;
                                             viewport = {
                                                 width: (view[2] - view[0]) * 3.0,
@@ -3621,9 +3602,9 @@ RefSense.Plugin = {
                                             };
                                             this.log('✅ Using page.getViewBox():', viewBox);
                                         } else {
-                                            // 기본 viewport 설정
+                                            // Configure default viewport
                                             viewport = {
-                                                width: 595 * 3.0, // A4 기본 크기
+                                                width: 595 * 3.0, // A4 base size
                                                 height: 842 * 3.0,
                                                 scale: 3.0,
                                                 offsetX: 0,
@@ -3637,12 +3618,12 @@ RefSense.Plugin = {
                                             height: viewport.height,
                                             scale: viewport.scale || 3.0
                                         });
-                                        // 🎨 다중 canvas 생성 시도
+                                        // 🎨 Attempt to create multiple canvases
                                         let canvas, context;
                                         const canvasCreationMethods = [
                                             () => targetWindow.document.createElement('canvas'),
                                             () => { 
-                                                // 안전한 canvas 생성 - targetWindow 사용 필수
+                                                // Safely create canvas - must use targetWindow
                                                 if (targetWindow && targetWindow.document) {
                                                     return targetWindow.document.createElement('canvas');
                                                 } else {
@@ -3691,7 +3672,7 @@ RefSense.Plugin = {
                                         this.log('📐 Canvas dimensions:', canvas.width, 'x', canvas.height);
                                         this.log('🎨 Render context:', Object.keys(renderContext));
                                         
-                                        // 🎯 다양한 render 메서드 시도
+                                        // 🎯 Try various render methods
                                         let renderPromise;
                                         
                                         if (typeof page.render === 'function') {
@@ -3708,7 +3689,7 @@ RefSense.Plugin = {
                                             throw new Error('No available render method found on page object');
                                         }
                                         
-                                        // 타임아웃과 함께 렌더링 대기 (증가된 시간)
+                                        // Wait for rendering with an extended timeout
                                         await Promise.race([
                                             renderPromise,
                                             new Promise((_, reject) => 
@@ -3716,7 +3697,7 @@ RefSense.Plugin = {
                                             )
                                         ]);
                                         
-                                        // 렌더링 후 추가 대기
+                                        // Wait a bit longer after rendering
                                         await new Promise(resolve => setTimeout(resolve, 1000));
                                         
                                         this.log('✅ Ultra high quality rendering completed');
@@ -3742,7 +3723,7 @@ RefSense.Plugin = {
                                             intent: 'display'
                                         };
                                         
-                                        // 🎯 다양한 render 메서드 시도
+                                        // 🎯 Try various render methods
                                         if (typeof page.render === 'function') {
                                             const renderTask = page.render(renderContext);
                                             await (renderTask.promise || renderTask);
@@ -3774,7 +3755,7 @@ RefSense.Plugin = {
                                             intent: 'display'
                                         };
                                         
-                                        // 🎯 다양한 render 메서드 시도
+                                        // 🎯 Try various render methods
                                         if (typeof page.render === 'function') {
                                             const renderTask = page.render(renderContext);
                                             await (renderTask.promise || renderTask);
@@ -3806,7 +3787,7 @@ RefSense.Plugin = {
                                             intent: 'print'
                                         };
                                         
-                                        // 🎯 다양한 render 메서드 시도
+                                        // 🎯 Try various render methods
                                         if (typeof page.render === 'function') {
                                             const renderTask = page.render(renderContext);
                                             await (renderTask.promise || renderTask);
@@ -3833,7 +3814,7 @@ RefSense.Plugin = {
                                             viewport: viewport
                                         };
                                         
-                                        // 🎯 다양한 render 메서드 시도
+                                        // 🎯 Try different render methods
                                         if (typeof page.render === 'function') {
                                             const renderTask = page.render(renderContext);
                                             await (renderTask.promise || renderTask);
@@ -3855,7 +3836,7 @@ RefSense.Plugin = {
                                         if (canvas && canvas.width > 0 && canvas.height > 0) {
                                             this.log(`📋 Canvas created: ${canvas.width}x${canvas.height}`);
                                             
-                                            // 📋 Canvas 내용 검증
+                                            // 📋 Validate canvas contents
                                             const isCanvasValid = this.validateCanvasContent(canvas);
                                             
                                             if (isCanvasValid) {
@@ -3864,12 +3845,12 @@ RefSense.Plugin = {
                                                 result.height = canvas.height;
                                                 result.success = true;
                                                 
-                                                this.log(`🎉 PDF.js 강제 렌더링 성공! Method: ${i + 1}, Size: ${canvas.width}x${canvas.height}`);
+                                            this.log(`🎉 Forced PDF.js rendering succeeded! Method: ${i + 1}, Size: ${canvas.width}x${canvas.height}`);
                                                 this.log(`📊 Canvas content validation: PASSED`);
                                                 return result;
                                             } else {
                                                 this.log(`⚠️ Canvas rendered but content validation failed (approach ${i + 1})`);
-                                                // 검증 실패해도 다음 접근법 시도
+                                                // Even if validation fails, continue with the next approach
                                             }
                                         } else {
                                             this.log(`❌ Canvas creation failed or invalid dimensions (approach ${i + 1})`);
@@ -3878,7 +3859,7 @@ RefSense.Plugin = {
                                     } catch (approachError) {
                                         this.log(`❌ PDF.js approach ${i + 1} error:`, approachError.message);
                                         
-                                        // 에러 상세 정보 로깅
+                                        // Log detailed error information
                                         if (approachError.stack) {
                                             this.log('📝 Error stack:', approachError.stack.slice(0, 300));
                                         }
@@ -3910,13 +3891,13 @@ RefSense.Plugin = {
         try {
             this.log('🔍 Starting enhanced existing canvas search...');
             
-            // 🔍 더 광범위한 문서 접근 (안전한 방식)
+            // 🔍 Broader document access (safe pathway)
             const targetDocs = [
                 reader._iframeWindow?.document,
                 reader._window?.document,
                 reader.iframe?.contentDocument,
                 reader._iframe?.contentDocument
-                // document 직접 접근 제거 (권한 문제)
+                // Remove direct document access (permission constraints)
             ].filter(doc => doc);
             
             this.log(`📄 Found ${targetDocs.length} documents to search`);
@@ -3925,13 +3906,13 @@ RefSense.Plugin = {
                 const targetDoc = targetDocs[docIdx];
                 this.log(`🔍 Searching document ${docIdx + 1}/${targetDocs.length}`);
                 
-                // 🕐 렌더링 대기 시간 대폭 증가
+                // 🕐 Greatly increase rendering wait time
                 this.log('⏳ Waiting for rendering completion...');
-                await new Promise(resolve => setTimeout(resolve, 8000)); // 8초 대기
+                await new Promise(resolve => setTimeout(resolve, 8000)); // Wait 8 seconds
                 
-                // 🔍 확장된 canvas selector 목록
+                // 🔍 Expanded list of canvas selectors
                 const canvasSelectors = [
-                    // 페이지 별 selectors
+                    // Per-page selectors
                     `[data-page-number="${pageNumber}"] canvas`,
                     `.page[data-page-number="${pageNumber}"] canvas`,
                     `#pageContainer${pageNumber} canvas`,
@@ -3939,20 +3920,20 @@ RefSense.Plugin = {
                     `canvas[data-page="${pageNumber}"]`,
                     `canvas[data-page-number="${pageNumber}"]`,
                     
-                    // 일반적인 PDF 뷰어 selectors
+                    // Common PDF viewer selectors
                     '.pdfViewer .page canvas',
                     '.pdfViewer canvas',
                     '.viewer canvas',
                     '.pdf-viewer canvas',
                     '.page canvas',
                     
-                    // Zotero 7 특수 selectors
+                    // Zotero 7 specific selectors
                     '.readerContainer canvas',
                     '.reader-container canvas',
                     '[class*="reader"] canvas',
                     '[class*="pdf"] canvas',
                     
-                    // 모든 canvas 요소들
+                    // All canvas elements
                     'canvas:not([data-page-number])',
                     'canvas'
                 ];
@@ -3967,7 +3948,7 @@ RefSense.Plugin = {
                         this.log(`🔍 Selector ${selIdx + 1}/${canvasSelectors.length}: "${selector}" → ${canvases.length} elements`);
                         
                         if (canvases.length > 0) {
-                            // canvas 요소들을 상세하게 분석
+                            // Analyze canvas elements in detail
                             for (let i = 0; i < canvases.length; i++) {
                                 const canvas = canvases[i];
                                 
@@ -3980,9 +3961,9 @@ RefSense.Plugin = {
                                     dataAttrs: Object.keys(canvas.dataset || {})
                                 });
                                 
-                                if (canvas && canvas.toDataURL && canvas.width > 10 && canvas.height > 10) { // 임계값 낮춤
+                                if (canvas && canvas.toDataURL && canvas.width > 10 && canvas.height > 10) { // Lowered threshold
                                     try {
-                                        // 🔍 전용 검증 함수 사용
+                                        // 🔍 Use dedicated validation function
                                         const isValidCanvas = this.validateCanvasContent(canvas);
                                         
                                         if (isValidCanvas) {
@@ -4008,7 +3989,7 @@ RefSense.Plugin = {
                     }
                 }
                 
-                // 이 문서에서 아무것도 찾지 못한 경우
+                // If nothing is found in this document
                 this.log(`⚠️ No valid canvas found in document ${docIdx + 1}`);
             }
                 
@@ -4411,7 +4392,7 @@ RefSense.Plugin = {
             this.log('Checking Ollama connection...');
             const isConnected = await this.ollamaAPI.checkConnection(this.config.ollama_host);
             if (!isConnected) {
-                throw new Error(`Ollama 서버에 연결할 수 없습니다.\n\n확인사항:\n1. 'ollama serve' 명령으로 서버를 실행했는지 확인\n2. 호스트 주소가 정확한지 확인: ${this.config.ollama_host}`);
+                throw new Error(`Cannot connect to the Ollama server.\n\nPlease check:\n1. Ensure the server is running with 'ollama serve'\n2. Verify the host address: ${this.config.ollama_host}`);
             }
             
             this.log('Ollama connection confirmed, checking available models...');
@@ -4427,7 +4408,7 @@ RefSense.Plugin = {
             
             if (!modelExists) {
                 const modelList = availableModels.map(m => m.name || m).join(', ');
-                throw new Error(`모델 '${this.config.ollama_model}'을 찾을 수 없습니다.\n\n사용 가능한 모델: ${modelList}\n\n모델 설치: ollama pull ${this.config.ollama_model}`);
+                throw new Error(`Model '${this.config.ollama_model}' was not found.\n\nAvailable models: ${modelList}\n\nInstall with: ollama pull ${this.config.ollama_model}`);
             }
             
             this.log('Model confirmed:', this.config.ollama_model);
@@ -4473,22 +4454,22 @@ RefSense.Plugin = {
                                         const result = this.parseResponse(data.response);
                                         resolve(result);
                                     } catch (parseError) {
-                                        reject(new Error(`응답 파싱 오류: ${parseError.message}`));
+                                        reject(new Error(`Response parsing error: ${parseError.message}`));
                                     }
                                 } else {
                                     // Include response text for better debugging
                                     const errorDetail = xhr.responseText ? ` - ${xhr.responseText}` : '';
-                                    reject(new Error(`Ollama API 오류: ${xhr.status} ${xhr.statusText}${errorDetail}`));
+                                    reject(new Error(`Ollama API error: ${xhr.status} ${xhr.statusText}${errorDetail}`));
                                 }
                             }
                         };
                         
                         xhr.onerror = () => {
-                            reject(new Error(`네트워크 오류: Ollama 서버에 연결할 수 없습니다. (${host})`));
+                            reject(new Error(`Network error: Unable to connect to the Ollama server. (${host})`));
                         };
                         
                         xhr.ontimeout = () => {
-                            reject(new Error(`타임아웃: Ollama 서버 응답이 너무 느립니다.`));
+                            reject(new Error(`Timeout: Ollama server response is too slow.`));
                         };
                         
                         xhr.timeout = 30000;
@@ -4507,7 +4488,7 @@ RefSense.Plugin = {
                         xhr.send(requestData);
                         
                     } catch (error) {
-                        reject(new Error(`요청 생성 오류: ${error.message}`));
+                        reject(new Error(`Request creation error: ${error.message}`));
                     }
                 });
             },
@@ -4568,40 +4549,40 @@ RefSense.Plugin = {
             },
             
             buildPrompt(text) {
-                return `다음 학술 논문의 텍스트에서 정확한 서지정보를 추출하여 JSON 형식으로 반환해주세요.
+                return `Please extract accurate bibliographic metadata from the following academic paper text and return it as JSON.
 
-텍스트:
+Text:
 ${text.substring(0, 3000)}
 
-다음 형식의 JSON만 반환하세요:
+Return JSON in this exact format:
 {
-  "title": "논문 제목",
-  "authors": ["저자1", "저자2"],
-  "year": "출판년도",
-  "journal": "저널명",
-  "volume": "볼륨",
-  "issue": "호수",
-  "pages": "페이지",
+  "title": "Paper title",
+  "authors": ["Author 1", "Author 2"],
+  "year": "Publication year",
+  "journal": "Journal name",
+  "volume": "Volume",
+  "issue": "Issue",
+  "pages": "Pages",
   "doi": "DOI",
-  "abstract": "초록 전문 - 있다면 반드시 포함"
+  "abstract": "Full abstract - include if available"
 }
 
-주의사항:
-- 정확한 정보만 추출하세요
-- 불확실한 정보는 빈 문자열로 두세요
-- JSON 형식을 정확히 지켜주세요
-- 저자명은 반드시 배열로 반환하세요 - 각 저자를 개별 요소로 분리
-- 저자가 여러 명인 경우 모두 별개의 배열 항목으로 추가하세요
-- 초록(abstract)이 있다면 반드시 완전하게 추출하세요 - 매우 중요합니다
-- 초록은 요약하지 말고 원문 그대로 추출하세요
-- 추가 설명 없이 JSON만 반환하세요`;
+Guidelines:
+- Extract only accurate information.
+- Leave fields as empty strings if the information is uncertain.
+- Follow the JSON format exactly.
+- Always return authors as an array, separating each author into individual elements.
+- Include every author when multiple authors are present.
+- If an abstract exists, capture it completely - this is critical.
+- Do not summarize the abstract; use the original text as-is.
+- Return only the JSON without any additional explanation.`;
             },
             
             parseResponse(response) {
                 try {
                     const jsonMatch = response.match(/\{[\s\S]*\}/);
                     if (!jsonMatch) {
-                        throw new Error('JSON 형식을 찾을 수 없습니다');
+                        throw new Error('Unable to find JSON in the response');
                     }
 
                     const jsonStr = jsonMatch[0];
@@ -4619,7 +4600,7 @@ ${text.substring(0, 3000)}
                         abstract: metadata.abstract || ''
                     };
                 } catch (error) {
-                    throw new Error('AI 응답을 파싱할 수 없습니다: ' + error.message);
+                    throw new Error('Unable to parse AI response: ' + error.message);
                 }
             },
             
@@ -4667,7 +4648,7 @@ ${text.substring(0, 3000)}
             } else {
                 // User cancelled
                 this.log('🔵 [DEBUG] User cancelled metadata comparison');
-                return { success: false, error: '사용자가 취소했습니다' };
+                return { success: false, error: 'User cancelled the operation' };
             }
             
         } catch (error) {
@@ -4683,7 +4664,7 @@ ${text.substring(0, 3000)}
             
             // Validate metadata
             if (!metadata.title || metadata.title.trim().length === 0) {
-                throw new Error('제목이 추출되지 않았습니다. 메타데이터가 불완전합니다.');
+                throw new Error('No title was extracted; metadata is incomplete.');
             }
             
             // Create new parent item
@@ -4752,26 +4733,26 @@ ${text.substring(0, 3000)}
             }
             
             // Show success message
-            const abstractInfo = metadata.abstract && metadata.abstract.trim() ? `초록: ${metadata.abstract.substring(0, 100)}${metadata.abstract.length > 100 ? '...' : ''}` : '';
-            let successMessage = `새로운 parent item이 생성되었습니다:\n\n` +
-                `제목: ${metadata.title}\n` +
-                `저자: ${metadata.authors.join(', ')}\n` +
-                `저널: ${metadata.journal}\n` +
-                `연도: ${metadata.year}`;
+            const abstractInfo = metadata.abstract && metadata.abstract.trim() ? `Abstract: ${metadata.abstract.substring(0, 100)}${metadata.abstract.length > 100 ? '...' : ''}` : '';
+            let successMessage = `A new parent item has been created:\n\n` +
+                `Title: ${metadata.title}\n` +
+                `Authors: ${metadata.authors.join(', ')}\n` +
+                `Journal: ${metadata.journal}\n` +
+                `Year: ${metadata.year}`;
             
             if (abstractInfo) {
                 successMessage += `\n${abstractInfo}`;
             }
             
             this.showMessage(
-                'Parent 생성 완료',
+                'Parent creation complete',
                 successMessage,
                 'success'
             );
             
         } catch (error) {
             this.handleError(error, 'createNewParent');
-            this.showMessage('Parent 생성 실패', error.message, 'error');
+            this.showMessage('Parent creation failed', error.message, 'error');
             throw error;
         }
     },
@@ -4897,7 +4878,7 @@ ${text.substring(0, 3000)}
                 return;
             }
             
-            // 먼저 테스트용 간단한 HTML 시도
+            // First try a simple HTML test dialog
             const testURL = this.rootURI + 'preferences/test.html';
             this.log('Testing with simple HTML at:', testURL);
             
@@ -4913,7 +4894,7 @@ ${text.substring(0, 3000)}
                 this.log('Test dialog error:', testError.message);
             }
             
-            // 실제 설정창 열기
+            // Open the actual preferences window
             const preferencesURL = this.rootURI + 'prefs.html';
             this.log('Opening preferences with openDialog at:', preferencesURL);
             
@@ -4941,28 +4922,28 @@ ${text.substring(0, 3000)}
     // Interactive preferences using native dialogs
     showInteractivePreferences() {
         try {
-            // 현재 설정 상태 확인
+            // Check the current configuration state
             const currentEncodedKey = Zotero.Prefs.get('extensions.refsense.openai_api_key');
             const currentKey = currentEncodedKey ? atob(currentEncodedKey) : null;
             const hasKey = currentKey && currentKey.length > 0;
             
-            // 설정 상태 표시
-            let message = '🤖 RefSense 설정\n\n';
+            // Display configuration summary
+            let message = '🤖 RefSense configuration\n\n';
             if (hasKey) {
-                message += `✅ 현재 API 키: ${currentKey.substring(0, 15)}...\n\n`;
-                message += '1. API 키 변경\n';
-                message += '2. 연결 테스트\n';
-                message += '3. 설정 확인\n';
-                message += '4. 취소\n\n';
-                message += '선택하세요 (1-4):';
+                message += `✅ Current API key: ${currentKey.substring(0, 15)}...\n\n`;
+                message += '1. Change API key\n';
+                message += '2. Test connection\n';
+                message += '3. View settings\n';
+                message += '4. Cancel\n\n';
+                message += 'Enter your choice (1-4):';
             } else {
-                message += '❌ API 키가 설정되지 않았습니다.\n\n';
-                message += 'OpenAI API 키를 설정하시겠습니까?\n';
-                message += '(확인: 설정, 취소: 나중에)';
+                message += '❌ No API key is currently configured.\n\n';
+                message += 'Would you like to configure an OpenAI API key now?\n';
+                message += '(OK: configure now, Cancel: later)';
             }
             
             if (hasKey) {
-                // 기존 키가 있는 경우 - 옵션 선택
+                // If a key exists, allow user to choose
                 const choice = prompt(message);
                 
                 switch (choice) {
@@ -4977,11 +4958,11 @@ ${text.substring(0, 3000)}
                         break;
                     case '4':
                     default:
-                        // 취소
+                        // Cancel
                         break;
                 }
             } else {
-                // 키가 없는 경우 - 직접 설정
+                // If no key exists, request direct input
                 if (confirm(message)) {
                     this.changeApiKey();
                 }
@@ -4993,67 +4974,67 @@ ${text.substring(0, 3000)}
         }
     },
 
-    // API 키 변경
+    // Change API key
     changeApiKey() {
         try {
             const currentEncodedKey = Zotero.Prefs.get('extensions.refsense.openai_api_key');
             const currentKey = currentEncodedKey ? atob(currentEncodedKey) : '';
             
-            let message = 'OpenAI API 키를 입력하세요:\n\n';
-            message += '• sk-로 시작해야 합니다\n';
-            message += '• OpenAI 계정에서 발급받은 키를 사용하세요\n';
-            message += '• 취소하려면 빈 값을 입력하세요';
+            let message = 'Enter the OpenAI API key:\n\n';
+            message += '• It must start with sk-\n';
+            message += '• Use the key issued from your OpenAI account\n';
+            message += '• Leave blank to cancel';
             
             const newKey = prompt(message, currentKey ? '' : 'sk-');
             
             if (newKey && newKey.trim()) {
                 if (!newKey.startsWith('sk-')) {
-                    alert('❌ 오류: OpenAI API 키는 sk-로 시작해야 합니다.');
+                    alert('❌ Error: The OpenAI API key must start with sk-.');
                     return;
                 }
                 
-                // 설정 저장
+                // Save settings
                 Zotero.Prefs.set('extensions.refsense.openai_api_key', btoa(newKey.trim()));
                 Zotero.Prefs.set('extensions.refsense.ai_backend', 'openai');
                 Zotero.Prefs.set('extensions.refsense.openai_model', 'gpt-4-turbo');
                 Zotero.Prefs.set('extensions.refsense.default_page_source', 'first');
                 
-                alert('✅ API 키가 저장되었습니다!\n\n이제 PDF에서 RefSense 버튼을 사용할 수 있습니다.');
+                alert('✅ API key saved!\n\nYou can now use the RefSense button on PDFs.');
                 this.log('API key saved successfully');
                 
             } else if (newKey === '') {
-                // 취소
+                // Cancel
                 return;
             }
             
         } catch (error) {
             this.handleError(error, 'changeApiKey');
-            alert('❌ API 키 저장 중 오류가 발생했습니다.');
+            alert('❌ An error occurred while saving the API key.');
         }
     },
 
-    // API 연결 테스트
+    // API connection test
     async testApiConnection(apiKey) {
         try {
             if (!apiKey) {
-                alert('❌ API 키가 설정되지 않았습니다.');
+                alert('❌ No API key is configured.');
                 return;
             }
             
-            // 간단한 연결 테스트 (실제 API 호출 없이)
+            // Simple connection test (without real API call)
             if (apiKey.startsWith('sk-') && apiKey.length > 40) {
-                alert('✅ API 키 형식이 올바릅니다.\n\n실제 연결 테스트는 PDF에서 RefSense 버튼을 눌러 확인하세요.');
+                alert('✅ API key format looks valid.\n\nUse the RefSense button on a PDF to perform a real connection test.');
             } else {
-                alert('❌ API 키 형식이 올바르지 않습니다.');
+                alert('❌ API key format is invalid.');
             }
             
         } catch (error) {
             this.handleError(error, 'testApiConnection');
-            alert('❌ 연결 테스트 중 오류가 발생했습니다.');
+            alert('❌ An error occurred during the connection test.');
         }
     },
 
-    // 현재 설정 표시
+    // Display current settings
     showCurrentSettings() {
         try {
             const settings = {
@@ -5063,33 +5044,33 @@ ${text.substring(0, 3000)}
                 pageSource: Zotero.Prefs.get('extensions.refsense.default_page_source') || 'first'
             };
             
-            let message = '📋 현재 RefSense 설정:\n\n';
-            message += `• AI 백엔드: ${settings.backend}\n`;
-            message += `• 모델: ${settings.model}\n`;
-            message += `• 페이지 추출: ${settings.pageSource}\n`;
+            let message = '📋 Current RefSense settings:\n\n';
+            message += `• AI backend: ${settings.backend}\n`;
+            message += `• Model: ${settings.model}\n`;
+            message += `• Page extraction: ${settings.pageSource}\n`;
             
             if (settings.apiKey) {
                 const decodedKey = atob(settings.apiKey);
-                message += `• API 키: ${decodedKey.substring(0, 15)}... (${decodedKey.length}자)`;
+                message += `• API key: ${decodedKey.substring(0, 15)}... (${decodedKey.length} characters)`;
             } else {
-                message += '• API 키: 설정되지 않음';
+                message += '• API key: not set';
             }
             
             alert(message);
             
         } catch (error) {
             this.handleError(error, 'showCurrentSettings');
-            alert('❌ 설정 조회 중 오류가 발생했습니다.');
+            alert('❌ An error occurred while retrieving settings.');
         }
     },
 
-    // HTML 내용을 문자열로 반환
+    // Return HTML content as a string
     getPreferencesHTML() {
         return `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>RefSense 설정</title>
+    <title>RefSense Settings</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -5198,37 +5179,37 @@ ${text.substring(0, 3000)}
 </head>
 <body>
     <div class="container">
-        <h1>🤖 RefSense 설정</h1>
+        <h1>🤖 RefSense Settings</h1>
         
         <div id="statusMessage" class="status-message"></div>
         
         <div class="form-group">
-            <label for="openaiApiKey">OpenAI API 키</label>
+            <label for="openaiApiKey">OpenAI API key</label>
             <input type="password" id="openaiApiKey" placeholder="sk-...">
             <div class="help-text">
-                OpenAI 계정에서 발급받은 API 키를 입력하세요.
+                Enter the API key issued from your OpenAI account.
             </div>
         </div>
         
         <div class="form-group">
-            <label for="openaiModel">모델</label>
+            <label for="openaiModel">Model</label>
             <select id="openaiModel">
-                <option value="gpt-4-turbo">GPT-4 Turbo (권장)</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo (recommended)</option>
                 <option value="gpt-4">GPT-4</option>
                 <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
             </select>
         </div>
         
         <div class="button-group">
-            <button type="button" onclick="testConnection()">연결 테스트</button>
-            <button type="button" class="primary" onclick="saveSettings()">저장</button>
+            <button type="button" onclick="testConnection()">Test connection</button>
+            <button type="button" class="primary" onclick="saveSettings()">Save</button>
         </div>
     </div>
     
     <script>
-        console.log('RefSense 설정창 로드됨');
+        console.log('RefSense settings window loaded');
         
-        // 설정 로드
+        // Load settings
         document.addEventListener('DOMContentLoaded', function() {
             loadSettings();
         });
@@ -5236,11 +5217,11 @@ ${text.substring(0, 3000)}
         function loadSettings() {
             try {
                 if (window.RefSensePlugin) {
-                    // Plugin에서 설정 로드 (향후 구현)
-                    console.log('Plugin 연결됨');
+                    // Load settings from the plugin (future enhancement)
+                    console.log('Plugin connected');
                 }
                 
-                // Zotero.Prefs에서 설정 로드
+                // Load settings from Zotero.Prefs
                 if (typeof Zotero !== 'undefined' && Zotero.Prefs) {
                     const encodedKey = Zotero.Prefs.get('extensions.refsense.openai_api_key');
                     if (encodedKey) {
@@ -5253,44 +5234,44 @@ ${text.substring(0, 3000)}
                     }
                 }
                 
-                console.log('설정 로드 완료');
+                console.log('Settings loaded');
             } catch (error) {
-                console.error('설정 로드 실패:', error);
+                console.error('Failed to load settings:', error);
             }
         }
-        
+
         function saveSettings() {
             try {
                 const apiKey = document.getElementById('openaiApiKey').value.trim();
                 
                 if (!apiKey) {
-                    showMessage('error', 'API 키를 입력해주세요.');
+                    showMessage('error', 'Please enter the API key.');
                     return;
                 }
-                
+
                 if (!apiKey.startsWith('sk-')) {
-                    showMessage('error', 'OpenAI API 키는 sk-로 시작해야 합니다.');
+                    showMessage('error', 'The OpenAI API key must start with sk-.');
                     return;
                 }
                 
                 const model = document.getElementById('openaiModel').value;
                 
-                // Zotero.Prefs에 저장
+                // Persist to Zotero.Prefs
                 if (typeof Zotero !== 'undefined' && Zotero.Prefs) {
                     Zotero.Prefs.set('extensions.refsense.openai_api_key', btoa(apiKey));
                     Zotero.Prefs.set('extensions.refsense.ai_backend', 'openai');
                     Zotero.Prefs.set('extensions.refsense.openai_model', model);
                     Zotero.Prefs.set('extensions.refsense.default_page_source', 'first');
                     
-                    showMessage('success', 'API 키와 설정이 저장되었습니다!');
-                    console.log('설정 저장 완료');
+                    showMessage('success', 'API key and settings have been saved!');
+                    console.log('Settings saved');
                 } else {
-                    showMessage('error', 'Zotero.Prefs에 접근할 수 없습니다.');
+                    showMessage('error', 'Unable to access Zotero.Prefs.');
                 }
-                
+
             } catch (error) {
-                console.error('설정 저장 실패:', error);
-                showMessage('error', '설정 저장에 실패했습니다: ' + error.message);
+                console.error('Failed to save settings:', error);
+                showMessage('error', 'Failed to save settings: ' + error.message);
             }
         }
         
@@ -5299,11 +5280,11 @@ ${text.substring(0, 3000)}
                 const apiKey = document.getElementById('openaiApiKey').value.trim();
                 
                 if (!apiKey) {
-                    showMessage('error', '먼저 API 키를 입력해주세요.');
+                    showMessage('error', 'Please enter the API key first.');
                     return;
                 }
-                
-                showMessage('info', 'OpenAI 연결을 테스트하는 중...');
+
+                showMessage('info', 'Testing the OpenAI connection...');
                 
                 const response = await fetch('https://api.openai.com/v1/models', {
                     headers: {
@@ -5312,14 +5293,14 @@ ${text.substring(0, 3000)}
                 });
                 
                 if (response.ok) {
-                    showMessage('success', 'OpenAI 연결 성공!');
+                    showMessage('success', 'OpenAI connection successful!');
                 } else {
-                    showMessage('error', 'API 키가 유효하지 않습니다.');
+                    showMessage('error', 'The API key is invalid.');
                 }
-                
+
             } catch (error) {
-                console.error('연결 테스트 실패:', error);
-                showMessage('error', '연결 테스트에 실패했습니다: ' + error.message);
+                console.error('Connection test failed:', error);
+                showMessage('error', 'Connection test failed: ' + error.message);
             }
         }
         
@@ -5343,40 +5324,40 @@ ${text.substring(0, 3000)}
     // Simple preferences dialog using multiple fallback methods
     showSimplePreferencesDialog() {
         try {
-            // 현재 저장된 API 키 확인
+            // Check the currently stored API key
             const currentEncodedKey = Zotero.Prefs.get('extensions.refsense.openai_api_key');
             const currentKey = currentEncodedKey ? atob(currentEncodedKey) : null;
             const hasKey = currentKey && currentKey.length > 0;
             
-            let message = 'RefSense API 키 설정 안내:\n\n';
+            let message = 'RefSense API key setup instructions:\n\n';
             if (hasKey) {
-                message += `현재 설정된 API 키: ${currentKey.substring(0, 15)}...\n\n`;
-                message += '새 API 키로 변경하려면 개발자 콘솔에서 다음 코드를 실행하세요:\n\n';
+                message += `Current API key: ${currentKey.substring(0, 15)}...\n\n`;
+                message += 'To change to a new API key, run the following code in the developer console:\n\n';
             } else {
-                message += '현재 API 키가 설정되지 않았습니다.\n\n';
-                message += 'API 키를 설정하려면 개발자 콘솔(F12)에서 다음 코드를 실행하세요:\n\n';
+                message += 'No API key is configured.\n\n';
+                message += 'To set an API key, open the developer console (F12) and run the following code:\n\n';
             }
             
             message += 'Zotero.Prefs.set("extensions.refsense.openai_api_key", btoa("sk-your-api-key-here"));\n';
             message += 'Zotero.Prefs.set("extensions.refsense.ai_backend", "openai");\n';
             message += 'Zotero.Prefs.set("extensions.refsense.openai_model", "gpt-4-turbo");\n\n';
-            message += '위 코드에서 "sk-your-api-key-here"를 실제 OpenAI API 키로 교체하세요.';
+            message += 'Replace "sk-your-api-key-here" with your actual OpenAI API key.';
             
-            // 알림창으로 안내 표시
-            this.showMessage('API 키 설정 안내', message, 'info');
+            // Show guidance in a message box
+            this.showMessage('API key setup instructions', message, 'info');
             
         } catch (error) {
             this.handleError(error, 'showSimplePreferencesDialog');
             
-            // 최후의 수단: 콘솔 로그로 안내
-            this.log('=== RefSense API 키 설정 방법 ===');
-            this.log('개발자 콘솔에서 다음 코드를 실행하세요:');
+            // Final fallback: log instructions to the console
+            this.log('=== RefSense API key setup ===');
+            this.log('Run the following code in the developer console:');
             this.log('Zotero.Prefs.set("extensions.refsense.openai_api_key", btoa("sk-your-api-key-here"));');
             this.log('Zotero.Prefs.set("extensions.refsense.ai_backend", "openai");');
             this.log('Zotero.Prefs.set("extensions.refsense.openai_model", "gpt-4-turbo");');
             this.log('=================================');
             
-            this.showMessage('설정 안내', '개발자 콘솔을 확인하여 API 키 설정 방법을 참고하세요.', 'info');
+            this.showMessage('Setup instructions', 'Check the developer console for API key setup guidance.', 'info');
         }
     },
     
@@ -5493,13 +5474,13 @@ ${text.substring(0, 3000)}
         try {
             // Validate metadata quality
             if (!metadata || !metadata.title) {
-                this.showMessage('메타데이터 부족', '추출된 정보가 부족합니다. 수동으로 메타데이터를 입력해주세요.', 'warning');
+                this.showMessage('Metadata incomplete', 'The extracted information is insufficient. Please enter the metadata manually.', 'warning');
                 return;
             }
             
             // Check confidence level
             if (metadata.confidence < 0.5) {
-                this.showMessage('신뢰도 낮음', '추출된 정보의 신뢰도가 낮습니다. 결과를 확인해주세요.', 'warning');
+                this.showMessage('Low confidence', 'The extracted information has low confidence. Please review the results.', 'warning');
             }
             
             // Create parent item
@@ -5507,7 +5488,7 @@ ${text.substring(0, 3000)}
             
         } catch (error) {
             this.handleError(error, 'processExtractedMetadata');
-            this.showMessage('메타데이터 처리 실패', `처리 중 오류가 발생했습니다: ${error.message}`, 'error');
+            this.showMessage('Metadata processing failed', `An error occurred while processing: ${error.message}`, 'error');
         }
     },
 
@@ -5519,14 +5500,14 @@ ${text.substring(0, 3000)}
             // Get the current PDF attachment item
             const pdfItem = await Zotero.Items.getAsync(pdfContext.itemID);
             if (!pdfItem) {
-                throw new Error('PDF 항목을 찾을 수 없습니다');
+                throw new Error('Unable to find the PDF item');
             }
             
             // Check if parent already exists
             if (pdfItem.parentID) {
                 const existingParent = await Zotero.Items.getAsync(pdfItem.parentID);
                 if (existingParent) {
-                    this.showMessage('부모 항목 존재', '이미 상위 항목이 존재합니다. 기존 항목을 수정하시겠습니까?', 'info');
+                    this.showMessage('Parent item exists', 'A parent item already exists. Would you like to edit the existing item?', 'info');
                     return;
                 }
             }
@@ -5589,7 +5570,7 @@ ${text.substring(0, 3000)}
             this.log('PDF attached to new parent item');
             
             // Show success message
-            this.showMessage('성공', `새로운 문헌 항목이 생성되었습니다: "${metadata.title}"`, 'success');
+            this.showMessage('Success', `A new bibliography item has been created: "${metadata.title}"`, 'success');
             
         } catch (error) {
             this.handleError(error, 'createParentItem');
@@ -5705,18 +5686,18 @@ ${text.substring(0, 3000)}
     // Show dialog for parent item update options
     showParentUpdateDialog(existingTitle, metadata) {
         const dialog = Services.prompt;
-        const title = "기존 Parent Item 발견";
+        const title = "Existing Parent Item Found";
         const message = 
-            `이 PDF는 이미 parent item이 있습니다:\n` +
+            `This PDF already has a parent item:\n` +
             `"${existingTitle}"\n\n` +
-            `새로 추출된 정보:\n` +
-            `제목: ${metadata.title}\n` +
-            `저자: ${metadata.authors.join(', ')}\n` +
-            `연도: ${metadata.year}\n` +
-            `저널: ${metadata.journal}\n\n` +
-            `어떻게 처리하시겠습니까?`;
+            `Newly extracted information:\n` +
+            `Title: ${metadata.title}\n` +
+            `Authors: ${metadata.authors.join(', ')}\n` +
+            `Year: ${metadata.year}\n` +
+            `Journal: ${metadata.journal}\n\n` +
+            `How would you like to proceed?`;
 
-        const buttons = ["기존 정보 업데이트", "새 Parent 생성", "취소"];
+        const buttons = ["Update existing information", "Create new parent", "Cancel"];
         
         try {
             const result = dialog.confirmEx(
@@ -5734,17 +5715,17 @@ ${text.substring(0, 3000)}
             );
             
             switch (result) {
-                case 0: return 'update';   // 기존 정보 업데이트
-                case 1: return 'new';      // 새 Parent 생성
-                case 2: return 'cancel';   // 취소
+                case 0: return 'update';   // Update existing information
+                case 1: return 'new';      // Create new parent
+                case 2: return 'cancel';   // Cancel
                 default: return 'cancel';
             }
         } catch (error) {
             this.log('Dialog error, falling back to simple confirm:', error.message);
             // Fallback to simple confirm dialog
             const simpleChoice = confirm(
-                `${message}\n\n기존 정보를 업데이트하시겠습니까?\n` +
-                `(취소하면 새 Parent를 생성합니다)`
+                `${message}\n\nWould you like to update the existing information?\n` +
+                `(Cancel to create a new parent item)`
             );
             return simpleChoice ? 'update' : 'new';
         }
@@ -5757,7 +5738,7 @@ ${text.substring(0, 3000)}
             
             const parentItem = await Zotero.Items.getAsync(parentID);
             if (!parentItem) {
-                throw new Error('기존 parent item을 찾을 수 없습니다.');
+                throw new Error('Unable to find the existing parent item.');
             }
 
             // Start transaction
@@ -5824,8 +5805,8 @@ ${text.substring(0, 3000)}
                 
                 this.log('Parent item updated successfully');
                 this.showMessage(
-                    '정보 업데이트 완료',
-                    `기존 parent item이 새로운 정보로 업데이트되었습니다.\n\n제목: ${metadata.title}`,
+                    'Information updated',
+                    `The existing parent item has been updated with new information.\n\nTitle: ${metadata.title}`,
                     'success'
                 );
                 
@@ -5835,8 +5816,8 @@ ${text.substring(0, 3000)}
         } catch (error) {
             this.error('Failed to update existing parent:', error);
             this.showMessage(
-                '업데이트 실패',
-                `기존 parent item 업데이트 중 오류가 발생했습니다: ${error.message}`,
+                'Update failed',
+                `An error occurred while updating the existing parent item: ${error.message}`,
                 'error'
             );
             throw error;
@@ -5899,13 +5880,13 @@ ${text.substring(0, 3000)}
             // Use custom dialog system with delay to ensure document is ready
             const result = await new Promise((resolve) => {
                 const dialogData = {
-                    title: '기존 Parent Item 업데이트',
+                    title: 'Update Existing Parent Item',
                     content: comparisonContent,
                     buttons: [
-                        { label: '새 Parent 생성', action: 'cancel' },
-                        { label: '모두 기존 값', action: 'all_existing' },
-                        { label: '모두 새 값', action: 'all_new' },
-                        { label: '선택한 항목 적용', action: 'apply', default: true }
+                        { label: 'Create new parent', action: 'cancel' },
+                        { label: 'Keep all existing values', action: 'all_existing' },
+                        { label: 'Use all new values', action: 'all_new' },
+                        { label: 'Apply selected values', action: 'apply', default: true }
                     ],
                     wide: true,
                     callback: (action, contentElement) => {
@@ -5943,8 +5924,8 @@ ${text.substring(0, 3000)}
             
             // Show error to user and don't update anything
             this.showMessage(
-                '비교 대화상자 오류',
-                '메타데이터 비교 대화상자를 표시하는 중 오류가 발생했습니다. 기존 정보는 변경되지 않습니다.',
+                'Comparison dialog error',
+                'An error occurred while displaying the metadata comparison dialog. Existing information remains unchanged.',
                 'error'
             );
             
@@ -5957,15 +5938,15 @@ ${text.substring(0, 3000)}
     createComparisonContent(existing, newData) {
         try {
             const fields = [
-                { key: 'title', label: '제목' },
-                { key: 'authors', label: '저자' },
-                { key: 'year', label: '연도' },
-                { key: 'journal', label: '저널' },
+                { key: 'title', label: 'Title' },
+                { key: 'authors', label: 'Authors' },
+                { key: 'year', label: 'Year' },
+                { key: 'journal', label: 'Journal' },
                 { key: 'doi', label: 'DOI' },
-                { key: 'abstract', label: '초록' },
-                { key: 'pages', label: '페이지' },
-                { key: 'volume', label: '볼륨' },
-                { key: 'issue', label: '이슈' }
+                { key: 'abstract', label: 'Abstract' },
+                { key: 'pages', label: 'Pages' },
+                { key: 'volume', label: 'Volume' },
+                { key: 'issue', label: 'Issue' }
             ];
 
         const truncateText = (text, maxLength = 80) => {
@@ -6004,8 +5985,8 @@ ${text.substring(0, 3000)}
         const rowsHTML = fields.map(field => {
             const existingValue = formatValue(existing[field.key], field.key);
             const newValue = formatValue(newData[field.key], field.key);
-            const existingDisplay = escapeHtml(truncateText(existingValue) || '(비어있음)');
-            const newDisplay = escapeHtml(truncateText(newValue) || '(비어있음)');
+        const existingDisplay = escapeHtml(truncateText(existingValue) || '(empty)');
+        const newDisplay = escapeHtml(truncateText(newValue) || '(empty)');
             const existingTitle = escapeHtml(existingValue);
             const newTitle = escapeHtml(newValue);
 
@@ -6036,18 +6017,18 @@ ${text.substring(0, 3000)}
 
         return `
             <div style="margin-bottom: 15px; padding: 10px; background: #e8f4f8; border-radius: 5px;">
-                <div style="font-weight: bold; margin-bottom: 5px;">기존 정보와 AI 추출 정보 비교</div>
-                <div style="font-size: 0.9em; color: #666;">이 PDF에는 이미 Parent Item이 있습니다. 각 필드에서 사용할 값을 선택하세요.</div>
-                <div style="font-size: 0.9em; color: #666; margin-top: 5px;">기본적으로 새로 추출된 값이 선택되어 있습니다.</div>
+                <div style="font-weight: bold; margin-bottom: 5px;">Comparison of existing information and AI output</div>
+                <div style="font-size: 0.9em; color: #666;">This PDF already has a parent item. Choose the value to use for each field.</div>
+                <div style="font-size: 0.9em; color: #666; margin-top: 5px;">By default, the newly extracted value is selected.</div>
             </div>
             
             <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: #f0f0f0; font-weight: bold;">
-                            <th style="padding: 10px; text-align: left; width: 20%; border-right: 1px solid #ddd;">필드</th>
-                            <th style="padding: 10px; text-align: left; width: 40%; border-right: 1px solid #ddd;">기존 값</th>
-                            <th style="padding: 10px; text-align: left; width: 40%;">새로 추출된 값</th>
+                            <th style="padding: 10px; text-align: left; width: 20%; border-right: 1px solid #ddd;">Field</th>
+                            <th style="padding: 10px; text-align: left; width: 40%; border-right: 1px solid #ddd;">Existing value</th>
+                            <th style="padding: 10px; text-align: left; width: 40%;">Newly extracted value</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -6057,7 +6038,7 @@ ${text.substring(0, 3000)}
             </div>
             
             <div style="margin-top: 15px; text-align: center; font-size: 0.9em; color: #666;">
-                <strong>팁:</strong> 각 행을 클릭하여 선택하거나, 상단 버튼으로 일괄 선택할 수 있습니다.
+                <strong>Tip:</strong> Click each row to choose a value, or use the buttons above for bulk selection.
             </div>
         `;
     } catch (error) {
@@ -6065,10 +6046,10 @@ ${text.substring(0, 3000)}
         this.log('🟡 [ERROR] Stack trace:', error.stack);
         return `
             <div style="padding: 20px; text-align: center; color: #666;">
-                <div style="margin-bottom: 10px;">⚠️ 비교 대화상자 생성 중 오류가 발생했습니다</div>
-                <div style="font-size: 0.9em;">오류: ${this.escapeHtml(error.message)}</div>
+                <div style="margin-bottom: 10px;">⚠️ An error occurred while generating the comparison dialog</div>
+                <div style="font-size: 0.9em;">Error: ${this.escapeHtml(error.message)}</div>
                 <div style="margin-top: 15px; font-size: 0.9em;">
-                    기존 Parent Item을 유지하려면 '취소'를 클릭하세요.
+                    Click 'Cancel' to keep the existing parent item.
                 </div>
             </div>
         `;
@@ -6115,7 +6096,7 @@ ${text.substring(0, 3000)}
             const existingMetadata = await this.getExistingParentMetadata(parentID);
             
             if (!parentItem) {
-                throw new Error('기존 parent item을 찾을 수 없습니다.');
+                throw new Error('Unable to locate the existing parent item.');
             }
 
             // Determine final values based on selection
@@ -6198,8 +6179,8 @@ ${text.substring(0, 3000)}
                 const updatedFields = Object.values(selection).filter(val => val === 'new').length;
                 
                 this.showMessage(
-                    '선택적 업데이트 완료',
-                    `${updatedFields}개 필드가 새로운 정보로 업데이트되었습니다.`,
+                    'Selective update complete',
+                    `${updatedFields} fields were updated with new information.`,
                     'success'
                 );
                 
@@ -6209,8 +6190,8 @@ ${text.substring(0, 3000)}
         } catch (error) {
             this.error('Failed to update existing parent selectively:', error);
             this.showMessage(
-                '선택적 업데이트 실패',
-                `선택적 업데이트 중 오류가 발생했습니다: ${error.message}`,
+                'Selective update failed',
+                `An error occurred during the selective update: ${error.message}`,
                 'error'
             );
             throw error;
@@ -6228,12 +6209,12 @@ ${text.substring(0, 3000)}
             // Use Zotero's built-in dialog system
             const result = await new Promise((resolve) => {
                 const dialogData = {
-                    title: 'AI 추출 메타데이터 미리보기',
+                    title: 'AI-extracted metadata preview',
                     content: previewContent,
                     buttons: [
-                        { label: '취소', action: 'cancel' },
-                        { label: '편집 후 생성', action: 'edit' },
-                        { label: '확인 및 생성', action: 'accept', default: true }
+                        { label: 'Cancel', action: 'cancel' },
+                        { label: 'Edit before creating', action: 'edit' },
+                        { label: 'Confirm and create', action: 'accept', default: true }
                     ],
                     callback: (action, data) => {
                         resolve({ action, data });
@@ -6257,13 +6238,13 @@ ${text.substring(0, 3000)}
             // Fallback to simple confirmation dialog
             const window = Services.wm.getMostRecentWindow('navigator:browser');
             const confirmed = window.confirm(
-                `AI가 추출한 메타데이터:\n\n` +
-                `제목: ${metadata.title || '(없음)'}\n` +
-                `저자: ${metadata.authors || '(없음)'}\n` +
-                `저널: ${metadata.journal || '(없음)'}\n` +
-                `연도: ${metadata.year || '(없음)'}\n` +
-                `DOI: ${metadata.doi || '(없음)'}\n\n` +
-                `이 정보로 Parent Item을 생성하시겠습니까?`
+                `AI-extracted metadata:\n\n` +
+                `Title: ${metadata.title || '(none)'}\n` +
+                `Authors: ${metadata.authors || '(none)'}\n` +
+                `Journal: ${metadata.journal || '(none)'}\n` +
+                `Year: ${metadata.year || '(none)'}\n` +
+                `DOI: ${metadata.doi || '(none)'}\n\n` +
+                `Create the parent item with this information?`
             );
             
             return confirmed ? { metadata } : null;
@@ -6358,7 +6339,7 @@ ${text.substring(0, 3000)}
         } catch (htmlError) {
             this.log('🟡 [ERROR] HTML content error:', htmlError.message);
             // If HTML parsing fails, show simple text
-            content.textContent = `HTML 콘텐츠를 표시할 수 없습니다: ${htmlError.message}\n\n대화상자를 닫고 다시 시도해주세요.`;
+            content.textContent = `Unable to display HTML content: ${htmlError.message}\n\nClose the dialog and try again.`;
             content.style.cssText = 'padding: 20px; text-align: center; color: #666; white-space: pre-line;';
         }
         dialog.appendChild(content);
@@ -6412,12 +6393,12 @@ ${text.substring(0, 3000)}
                 try {
                     // Use Services.prompt for cross-platform compatibility
                     const prompts = Services.prompt;
-                    const title = "메타데이터 비교";
-                    const text = `기존 Parent Item이 발견되었습니다.\n\n어떻게 처리하시겠습니까?`;
+                    const title = "Metadata Comparison";
+                    const text = `An existing parent item was found.\n\nHow would you like to proceed?`;
                     
-                    const button0 = "새 Parent 생성";
-                    const button1 = "모두 새 값으로 업데이트";  
-                    const button2 = "취소 (기존 값 유지)";
+                    const button0 = "Create new parent";
+                    const button1 = "Update all with new values";  
+                    const button2 = "Cancel (keep existing values)";
                     
                     const flags = prompts.BUTTON_TITLE_IS_STRING * prompts.BUTTON_POS_0 +
                                  prompts.BUTTON_TITLE_IS_STRING * prompts.BUTTON_POS_1 +
@@ -6440,13 +6421,13 @@ ${text.substring(0, 3000)}
                     // Process result
                     if (dialogData.callback) {
                         switch (result) {
-                            case 0: // 새 Parent 생성
+                            case 0: // Create new parent
                                 dialogData.callback('create_new', null);
                                 break;
-                            case 1: // 모두 새 값으로 업데이트
+                            case 1: // Update all with new values
                                 dialogData.callback('all_new', null);
                                 break;
-                            case 2: // 취소
+                            case 2: // Cancel
                             default:
                                 dialogData.callback('cancel', null);
                                 break;
@@ -6475,20 +6456,20 @@ ${text.substring(0, 3000)}
     createPreviewContent(metadata, pdfContext) {
         try {
             const fields = [
-                { key: 'title', label: '제목' },
-                { key: 'authors', label: '저자' },
-                { key: 'year', label: '연도' },
-                { key: 'journal', label: '저널' },
+                { key: 'title', label: 'Title' },
+                { key: 'authors', label: 'Authors' },
+                { key: 'year', label: 'Year' },
+                { key: 'journal', label: 'Journal' },
                 { key: 'doi', label: 'DOI' },
-                { key: 'abstract', label: '초록' },
-                { key: 'pages', label: '페이지' },
-                { key: 'volume', label: '권' },
-                { key: 'issue', label: '호' }
+                { key: 'abstract', label: 'Abstract' },
+                { key: 'pages', label: 'Pages' },
+                { key: 'volume', label: 'Volume' },
+                { key: 'issue', label: 'Issue' }
             ];
         
         const fieldsHTML = fields.map(field => {
             const value = metadata[field] || '';
-            const displayValue = value || '(비어있음)';
+            const displayValue = value || '(empty)';
             const isEmpty = !value;
             
             return `
@@ -6505,26 +6486,26 @@ ${text.substring(0, 3000)}
         
         return `
             <div style="margin-bottom: 15px; padding: 10px; background: #e8f4f8; border-radius: 5px;">
-                <div style="font-weight: bold;">PDF 파일: ${pdfContext.filename || 'Unknown'}</div>
-                <div style="font-size: 0.9em; color: #666;">추출 방법: AI 메타데이터 추출</div>
+                <div style="font-weight: bold;">PDF file: ${pdfContext.filename || 'Unknown'}</div>
+                <div style="font-size: 0.9em; color: #666;">Extraction method: AI metadata extraction</div>
             </div>
             <div style="max-height: 400px; overflow-y: auto;">
                 ${fieldsHTML}
             </div>
             <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 0.9em; color: #666; text-align: center;">
-                확인: 그대로 생성 | 편집: 수정 후 생성 | 취소: 작업 중단
+                Confirm: create as-is | Edit: modify before creating | Cancel: abort
             </div>
         `;
         } catch (error) {
             this.log('🟡 [ERROR] createPreviewContent failed:', error.message);
             return `
                 <div style="padding: 20px; text-align: center; color: #666;">
-                    <div style="margin-bottom: 10px;">⚠️ 미리보기 생성 중 오류가 발생했습니다</div>
-                    <div style="font-size: 0.9em;">오류: ${this.escapeHtml(error.message)}</div>
+                    <div style="margin-bottom: 10px;">⚠️ An error occurred while generating the preview</div>
+                    <div style="font-size: 0.9em;">Error: ${this.escapeHtml(error.message)}</div>
                     <div style="margin-top: 15px;">
-                        <div style="font-weight: bold;">추출된 기본 정보:</div>
-                        <div>제목: ${this.escapeHtml(metadata.title || '추출 실패')}</div>
-                        <div>저자: ${this.escapeHtml(metadata.authors ? String(metadata.authors) : '추출 실패')}</div>
+                        <div style="font-weight: bold;">Extracted details:</div>
+                        <div>Title: ${this.escapeHtml(metadata.title || 'Extraction failed')}</div>
+                        <div>Authors: ${this.escapeHtml(metadata.authors ? String(metadata.authors) : 'Extraction failed')}</div>
                     </div>
                 </div>
             `;
@@ -6792,8 +6773,8 @@ ${text.substring(0, 3000)}
             );
             
             refSenseMenuItem.id = 'refsense-extract-metadata';
-            refSenseMenuItem.setAttribute('label', '📄 RefSense: 서지정보 추출');
-            refSenseMenuItem.setAttribute('tooltiptext', 'AI를 사용해 PDF에서 서지정보를 추출하여 parent item을 생성합니다');
+            refSenseMenuItem.setAttribute('label', '📄 RefSense: Extract Bibliographic Info');
+            refSenseMenuItem.setAttribute('tooltiptext', 'Use AI to extract bibliographic metadata from the PDF and create the parent item');
             
             // Add event listener
             refSenseMenuItem.addEventListener('command', () => {
@@ -6801,6 +6782,7 @@ ${text.substring(0, 3000)}
             });
 
             // Find appropriate position (after "Show File" if it exists)
+            // Include Korean label matcher to support localized Zotero menus
             const showFileItem = contextMenu.querySelector('[label*="Show File"], [label*="파일 보기"]');
             if (showFileItem) {
                 contextMenu.insertBefore(refSenseMenuItem, showFileItem.nextSibling);
@@ -6876,7 +6858,7 @@ ${text.substring(0, 3000)}
 
         } catch (error) {
             this.log('❌ Context menu action failed:', error.message);
-            this.showError('RefSense 오류', `처리 중 오류가 발생했습니다: ${error.message}`);
+            this.showError('RefSense error', `An error occurred during processing: ${error.message}`);
         }
     },
 
@@ -6891,8 +6873,8 @@ ${text.substring(0, 3000)}
 
                 const choice = Services.prompt.select(
                     null,
-                    'RefSense PDF 선택',
-                    `처리할 PDF를 선택하세요:\n\n${options}`,
+                    'Select RefSense PDF',
+                    `Choose the PDF to process:\n\n${options}`,
                     pdfItems.length,
                     pdfItems.map((item, index) => {
                         const filename = item.getField('title') || item.getDisplayTitle() || `PDF ${index + 1}`;

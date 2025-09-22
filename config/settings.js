@@ -1,39 +1,39 @@
 /**
- * RefSense 통합 설정 관리 모듈
- * Zotero 7 호환 설정 시스템
+ * RefSense unified settings manager
+ * Settings system compatible with Zotero 7
  */
 
 class SettingsManager {
     constructor() {
         this.prefBranch = 'extensions.refsense.';
         this.defaultSettings = {
-            // AI 백엔드 설정
+            // AI backend settings
             aiBackend: 'openai', // 'openai' | 'ollama'
             
-            // OpenAI 설정
+            // OpenAI settings
             openaiModel: 'gpt-4-turbo',
-            openaiApiKey: '', // Base64 인코딩되어 저장됨
+            openaiApiKey: '', // Stored as Base64
             
-            // Ollama 설정
+            // Ollama settings
             ollamaModel: 'llama3.2:latest',
             ollamaHost: 'http://localhost:11434',
             
-            // PDF 추출 설정
+            // PDF extraction settings
             defaultPageSource: 'first', // 'first' | 'current' | 'range'
             pageRange: '1-2',
             
-            // 기타 설정
+            // Other settings
             enableLogging: true,
             maxRetries: 3,
-            requestTimeout: 30000 // 30초
+            requestTimeout: 30000 // 30 seconds
         };
     }
 
     /**
-     * 설정값 가져오기
-     * @param {string} key - 설정 키
-     * @param {*} defaultValue - 기본값
-     * @returns {*} 설정값
+     * Retrieve a setting value
+     * @param {string} key - Setting key
+     * @param {*} defaultValue - Default value
+     * @returns {*} Retrieved value
      */
     get(key, defaultValue = null) {
         try {
@@ -41,12 +41,12 @@ class SettingsManager {
             const prefs = Components.classes["@mozilla.org/preferences-service;1"]
                 .getService(Components.interfaces.nsIPrefBranch);
 
-            // 키가 존재하는지 확인
+            // Check whether the key exists
             if (!prefs.prefHasUserValue(fullKey)) {
                 return defaultValue !== null ? defaultValue : this.defaultSettings[key];
             }
 
-            // 타입에 따라 적절한 메서드 사용
+            // Use the appropriate getter based on type
             const prefType = prefs.getPrefType(fullKey);
             switch (prefType) {
                 case prefs.PREF_STRING:
@@ -59,15 +59,15 @@ class SettingsManager {
                     return defaultValue !== null ? defaultValue : this.defaultSettings[key];
             }
         } catch (error) {
-            console.error(`설정 읽기 실패 (${key}):`, error);
+            console.error(`Failed to read setting (${key}):`, error);
             return defaultValue !== null ? defaultValue : this.defaultSettings[key];
         }
     }
 
     /**
-     * 설정값 저장하기
-     * @param {string} key - 설정 키
-     * @param {*} value - 저장할 값
+     * Store a setting value
+     * @param {string} key - Setting key
+     * @param {*} value - Value to store
      */
     set(key, value) {
         try {
@@ -75,7 +75,7 @@ class SettingsManager {
             const prefs = Components.classes["@mozilla.org/preferences-service;1"]
                 .getService(Components.interfaces.nsIPrefBranch);
 
-            // 타입에 따라 적절한 메서드 사용
+            // Use the appropriate setter based on type
             if (typeof value === 'string') {
                 prefs.setCharPref(fullKey, value);
             } else if (typeof value === 'number') {
@@ -83,18 +83,18 @@ class SettingsManager {
             } else if (typeof value === 'boolean') {
                 prefs.setBoolPref(fullKey, value);
             } else {
-                // 복잡한 객체는 JSON 문자열로 저장
+                // Store complex objects as JSON strings
                 prefs.setCharPref(fullKey, JSON.stringify(value));
             }
         } catch (error) {
-            console.error(`설정 저장 실패 (${key}):`, error);
+            console.error(`Failed to save setting (${key}):`, error);
             throw error;
         }
     }
 
     /**
-     * 모든 설정 가져오기
-     * @returns {Object} 설정 객체
+     * Retrieve all settings
+     * @returns {Object} Settings object
      */
     getAll() {
         const settings = {};
@@ -105,8 +105,8 @@ class SettingsManager {
     }
 
     /**
-     * 여러 설정 한번에 저장
-     * @param {Object} settings - 설정 객체
+     * Store multiple settings at once
+     * @param {Object} settings - Settings object
      */
     setAll(settings) {
         for (const [key, value] of Object.entries(settings)) {
@@ -117,32 +117,32 @@ class SettingsManager {
     }
 
     /**
-     * OpenAI API 키 안전하게 저장
-     * @param {string} apiKey - API 키
+     * Securely store the OpenAI API key
+     * @param {string} apiKey - API key
      */
     setOpenAIKey(apiKey) {
         if (!apiKey || typeof apiKey !== 'string') {
-            throw new Error('유효하지 않은 API 키');
+            throw new Error('Invalid API key');
         }
 
-        // 기본적인 API 키 형식 검증
+        // Basic API key format validation
         if (!apiKey.startsWith('sk-') || apiKey.length < 40) {
-            throw new Error('OpenAI API 키 형식이 올바르지 않습니다');
+            throw new Error('OpenAI API key format is invalid');
         }
 
         try {
-            // 간단한 인코딩으로 저장 (완전한 보안은 아니지만 기본 보호)
+            // Store with simple encoding (not full security but basic protection)
             const encodedKey = btoa(apiKey);
             this.set('openaiApiKey', encodedKey);
         } catch (error) {
-            console.error('API 키 저장 실패:', error);
-            throw new Error('API 키 저장에 실패했습니다');
+            console.error('Failed to store API key:', error);
+            throw new Error('Failed to store the API key');
         }
     }
 
     /**
-     * OpenAI API 키 가져오기
-     * @returns {string|null} 디코딩된 API 키
+     * Retrieve the OpenAI API key
+     * @returns {string|null} Decoded API key
      */
     getOpenAIKey() {
         try {
@@ -152,14 +152,14 @@ class SettingsManager {
             }
             return atob(encodedKey);
         } catch (error) {
-            console.error('API 키 복호화 실패:', error);
+            console.error('Failed to decode API key:', error);
             return null;
         }
     }
 
     /**
-     * API 키 존재 여부 확인
-     * @returns {boolean} API 키 존재 여부
+     * Check whether an API key exists
+     * @returns {boolean} API key presence
      */
     hasOpenAIKey() {
         const key = this.getOpenAIKey();
@@ -167,14 +167,14 @@ class SettingsManager {
     }
 
     /**
-     * 설정 초기화
+     * Reset settings
      */
     reset() {
         try {
             const prefs = Components.classes["@mozilla.org/preferences-service;1"]
                 .getService(Components.interfaces.nsIPrefBranch);
 
-            // 모든 플러그인 설정 제거
+            // Remove all plugin-specific settings
             const keys = prefs.getChildList(this.prefBranch, {});
             for (const key of keys) {
                 if (prefs.prefHasUserValue(key)) {
@@ -182,13 +182,13 @@ class SettingsManager {
                 }
             }
         } catch (error) {
-            console.error('설정 초기화 실패:', error);
+            console.error('Failed to reset settings:', error);
         }
     }
 
     /**
-     * 설정 유효성 검증
-     * @returns {Object} 검증 결과
+     * Validate settings
+     * @returns {Object} Validation result
      */
     validate() {
         const results = {
@@ -199,61 +199,61 @@ class SettingsManager {
 
         const settings = this.getAll();
 
-        // AI 백엔드 검증
+        // Validate AI backend
         if (!['openai', 'ollama'].includes(settings.aiBackend)) {
             results.valid = false;
-            results.errors.push('유효하지 않은 AI 백엔드');
+            results.errors.push('Invalid AI backend');
         }
 
-        // OpenAI 설정 검증
+        // Validate OpenAI settings
         if (settings.aiBackend === 'openai') {
             if (!this.hasOpenAIKey()) {
                 results.valid = false;
-                results.errors.push('OpenAI API 키가 설정되지 않았습니다');
+                results.errors.push('OpenAI API key is not configured');
             }
 
             if (!settings.openaiModel) {
-                results.warnings.push('OpenAI 모델이 설정되지 않았습니다');
+                results.warnings.push('OpenAI model is not configured');
             }
         }
 
-        // Ollama 설정 검증
+        // Validate Ollama settings
         if (settings.aiBackend === 'ollama') {
             if (!settings.ollamaHost) {
                 results.valid = false;
-                results.errors.push('Ollama 호스트가 설정되지 않았습니다');
+                results.errors.push('Ollama host is not configured');
             }
 
             if (!settings.ollamaModel) {
-                results.warnings.push('Ollama 모델이 설정되지 않았습니다');
+                results.warnings.push('Ollama model is not configured');
             }
         }
 
-        // 페이지 추출 옵션 검증
+        // Validate page extraction option
         if (!['first', 'current', 'range'].includes(settings.defaultPageSource)) {
-            results.warnings.push('유효하지 않은 페이지 추출 옵션');
+            results.warnings.push('Invalid page extraction option');
         }
 
         return results;
     }
 
     /**
-     * 설정 내보내기 (API 키 제외)
-     * @returns {Object} 내보낼 설정
+     * Export settings (excluding API key)
+     * @returns {Object} Exportable settings
      */
     export() {
         const settings = this.getAll();
-        // 보안상 API 키는 제외
+        // Exclude the API key for security reasons
         delete settings.openaiApiKey;
         return settings;
     }
 
     /**
-     * 설정 가져오기 (API 키 제외)
-     * @param {Object} settings - 가져올 설정
+     * Import settings (excluding API key)
+     * @param {Object} settings - Settings to import
      */
     import(settings) {
-        // API 키 관련 설정은 무시
+        // Ignore API key-related settings
         const safeSettings = { ...settings };
         delete safeSettings.openaiApiKey;
         
@@ -261,7 +261,7 @@ class SettingsManager {
     }
 }
 
-// Zotero 환경에서 글로벌 접근 가능하도록 내보내기
+// Export for global access in the Zotero environment
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = SettingsManager;
 } else if (typeof window !== 'undefined') {

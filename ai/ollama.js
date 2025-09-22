@@ -15,20 +15,20 @@ const OllamaAPI = {
                 const result = this.parseResponse(data.response);
                 resolve(result);
               } catch (parseError) {
-                reject(new Error(`응답 파싱 오류: ${parseError.message}`));
+                reject(new Error(`Response parsing error: ${parseError.message}`));
               }
             } else {
-              reject(new Error(`Ollama API 오류: ${xhr.status} ${xhr.statusText}`));
+              reject(new Error(`Ollama API error: ${xhr.status} ${xhr.statusText}`));
             }
           }
         };
         
         xhr.onerror = () => {
-          reject(new Error(`네트워크 오류: Ollama 서버에 연결할 수 없습니다. (${host})`));
+          reject(new Error(`Network error: Unable to connect to the Ollama server. (${host})`));
         };
         
         xhr.ontimeout = () => {
-          reject(new Error(`타임아웃: Ollama 서버 응답이 너무 느립니다.`));
+          reject(new Error(`Timeout: Ollama server response is too slow.`));
         };
         
         xhr.timeout = 30000; // 30 seconds timeout
@@ -47,7 +47,7 @@ const OllamaAPI = {
         xhr.send(requestData);
         
       } catch (error) {
-        reject(new Error(`요청 생성 오류: ${error.message}`));
+        reject(new Error(`Request creation error: ${error.message}`));
       }
     });
   },
@@ -108,40 +108,40 @@ const OllamaAPI = {
   },
 
   buildPrompt(text) {
-    return `다음 학술 논문의 텍스트에서 정확한 서지정보를 추출하여 JSON 형식으로 반환해주세요.
+    return `Please extract accurate bibliographic metadata from the following academic paper text and return it in JSON format.
 
-텍스트:
+Text:
 ${text.substring(0, 3000)}
 
-다음 형식의 JSON만 반환하세요:
+Return JSON in the following format only:
 {
-  "title": "논문 제목",
-  "authors": ["저자1", "저자2"],
-  "year": "출판년도",
-  "journal": "저널명",
-  "volume": "볼륨",
-  "issue": "호수",
-  "pages": "페이지",
+  "title": "Paper title",
+  "authors": ["Author 1", "Author 2"],
+  "year": "Publication year",
+  "journal": "Journal name",
+  "volume": "Volume",
+  "issue": "Issue",
+  "pages": "Pages",
   "doi": "DOI",
-  "abstract": "초록 전문 - 있다면 반드시 포함"
+  "abstract": "Full abstract - include if available"
 }
 
-주의사항:
-- 정확한 정보만 추출하세요
-- 불확실한 정보는 빈 문자열로 두세요
-- JSON 형식을 정확히 지켜주세요
-- 저자명은 반드시 배열로 반환하세요 - 각 저자를 개별 요소로 분리
-- 저자가 여러 명인 경우 모두 별개의 배열 항목으로 추가하세요
-- 초록(abstract)이 있다면 반드시 완전하게 추출하세요 - 매우 중요합니다
-- 초록은 요약하지 말고 원문 그대로 추출하세요
-- 추가 설명 없이 JSON만 반환하세요`;
+Guidelines:
+- Extract only accurate information.
+- Leave fields as empty strings if the information is uncertain.
+- Follow the JSON format exactly.
+- Always return the authors as an array. Separate each author into its own element.
+- When there are multiple authors, include every author as a separate array entry.
+- If an abstract exists, capture it completely. This is very important.
+- Do not summarize the abstract; use the original text as-is.
+- Return only the JSON without any additional explanation.`;
   },
 
   parseResponse(response) {
     try {
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        throw new Error('JSON 형식을 찾을 수 없습니다');
+        throw new Error('Unable to find JSON in the response');
       }
 
       const jsonStr = jsonMatch[0];
@@ -159,8 +159,8 @@ ${text.substring(0, 3000)}
         abstract: metadata.abstract || ''
       };
     } catch (error) {
-      console.error('응답 파싱 오류:', error);
-      throw new Error('AI 응답을 파싱할 수 없습니다: ' + error.message);
+      console.error('Response parsing error:', error);
+      throw new Error('Unable to parse AI response: ' + error.message);
     }
   },
 
@@ -172,7 +172,7 @@ ${text.substring(0, 3000)}
         if (i === maxRetries - 1) throw error;
         
         const delay = Math.pow(2, i) * 1000;
-        console.log(`재시도 ${i + 1}/${maxRetries} (${delay}ms 후)`);
+        console.log(`Retry ${i + 1}/${maxRetries} (after ${delay}ms)`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
