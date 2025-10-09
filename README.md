@@ -145,24 +145,26 @@ make build-xpi
 CONTAINER=podman make build-xpi
 ```
 
-This uses a named volume `refsense_node_modules` so `node_modules/` does not clutter your repo.
+This uses a local directory `.node_modules/` (bind-mounted) so `node_modules/` does not clutter your repo and avoids Docker Desktop volume permission issues on WSL.
 
 Manual commands (alternative):
 
 ```bash
-# Docker
+# Docker (bind-mount a local .node_modules directory)
+mkdir -p .node_modules
 docker run --rm \
   -u $(id -u):$(id -g) \
   -v "$PWD":/workspace \
-  -v refsense_node_modules:/workspace/node_modules \
+  -v "$PWD/.node_modules":/workspace/node_modules \
   -w /workspace \
   node:18-bullseye sh -c "npm ci && npm run build"
 
 # Podman
+mkdir -p .node_modules
 podman run --rm \
   -u $(id -u):$(id -g) \
   -v "$PWD":/workspace \
-  -v refsense_node_modules:/workspace/node_modules \
+  -v "$PWD/.node_modules":/workspace/node_modules \
   -w /workspace \
   docker.io/library/node:18-bullseye sh -c "npm ci && npm run build"
 ```
@@ -176,6 +178,10 @@ make docker-image
 # Build .xpi using the local image
 make build-xpi-image
 ```
+
+Troubleshooting (WSL + Docker Desktop)
+- If you see EACCES errors for `/workspace/node_modules`, ensure `.node_modules/` exists and is writable in your WSL filesystem (not a Windows mount). The Makefile’s `prepare` step handles this.
+- If Docker is not detected in WSL, enable WSL integration in Docker Desktop settings or use `CONTAINER=podman` with Podman installed in WSL.
 
 ### Prerequisites
 
