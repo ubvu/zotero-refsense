@@ -98,19 +98,19 @@ When a PDF already has a parent item (rare cases where button appears), RefSense
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Metadata comparison selection                              │
-│                                                        │
-│ ┌─────────┬─────────────────┬─────────────────────────┐   │
-│ │ Field   │ Existing Value  │ New Extracted Value     │   │
-│ ├─────────┼─────────────────┼─────────────────────────┤   │
-│ │ Title   │ ○ Old Title     │ ● New Extracted Title   │   │
-│ │ Authors │ ○ John Doe      │ ● Jane Smith, Bob Lee   │   │
-│ │ Year    │ ○ 2023          │ ● 2024                  │   │
-│ │ Journal │ ○ (empty)       │ ● Nature Science        │   │
-│ └─────────┴─────────────────┴─────────────────────────┘   │
-│                                                        │
-│ [Select All Existing] [Select All New]                 │
-│                           [Apply Selected] [Cancel]    │
+│ Metadata comparison selection                           │
+│                                                         │
+│ ┌─────────┬─────────────────┬─────────────────────────┐ │
+│ │ Field   │ Existing Value  │ New Extracted Value     │ │
+│ ├─────────┼─────────────────┼─────────────────────────┤ │
+│ │ Title   │ ○ Old Title     │ ● New Extracted Title   │ │
+│ │ Authors │ ○ John Doe      │ ● Jane Smith, Bob Lee   │ │
+│ │ Year    │ ○ 2023          │ ● 2024                  │ │
+│ │ Journal │ ○ (empty)       │ ● Nature Science        │ │
+│ └─────────┴─────────────────┴─────────────────────────┘ │
+│                                                         │
+│ [Select All Existing] [Select All New]                  │
+│                           [Apply Selected] [Cancel]     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -128,6 +128,55 @@ When a PDF already has a parent item (rare cases where button appears), RefSense
 
 ## 🛠️ Development
 
+### Containerized Build (no local Node required)
+
+If you don’t want Node.js or npm on your machine, build inside a container.
+
+- Requirements: Docker or Podman installed
+- Output: `build/refsense-YYYYMMDD.HHMM.xpi`
+
+Using Make (recommended):
+
+```bash
+# With Docker
+make build-xpi
+
+# With Podman
+CONTAINER=podman make build-xpi
+```
+
+This uses a named volume `refsense_node_modules` so `node_modules/` does not clutter your repo.
+
+Manual commands (alternative):
+
+```bash
+# Docker
+docker run --rm \
+  -u $(id -u):$(id -g) \
+  -v "$PWD":/workspace \
+  -v refsense_node_modules:/workspace/node_modules \
+  -w /workspace \
+  node:18-bullseye sh -c "npm ci && npm run build"
+
+# Podman
+podman run --rm \
+  -u $(id -u):$(id -g) \
+  -v "$PWD":/workspace \
+  -v refsense_node_modules:/workspace/node_modules \
+  -w /workspace \
+  docker.io/library/node:18-bullseye sh -c "npm ci && npm run build"
+```
+
+Optional: build and use a local image
+
+```bash
+# Build local image
+make docker-image
+
+# Build .xpi using the local image
+make build-xpi-image
+```
+
 ### Prerequisites
 
 - Node.js 16+
@@ -140,10 +189,10 @@ When a PDF already has a parent item (rare cases where button appears), RefSense
 git clone https://github.com/your-username/zotero-refsense.git
 cd zotero-refsense
 
-# Install dependencies
+# Install dependencies (local build only)
 npm install
 
-# Build the plugin
+# Build the plugin (local build only)
 npm run build
 
 # Development build with watching
