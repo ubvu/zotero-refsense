@@ -29,12 +29,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/zotero-refsense.git"
+    "url": "https://github.com/ubvu/zotero-refsense.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/zotero-refsense/issues"
+    "url": "https://github.com/ubvu/zotero-refsense/issues"
   },
-  "homepage": "https://github.com/your-username/zotero-refsense#readme",
+  "homepage": "https://github.com/ubvu/zotero-refsense#readme",
   "engines": {
     "node": ">=16.0.0"
   }
