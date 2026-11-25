@@ -192,7 +192,7 @@ Troubleshooting (WSL + Docker Desktop)
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/zotero-refsense.git
+git clone https://github.com/ubvu/zotero-refsense.git
 cd zotero-refsense
 
 # Install dependencies (local build only)
